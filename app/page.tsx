@@ -4,7 +4,6 @@ import { ArrowRight, Mail, MapPin } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import PhotoGallery from "@/components/photo-gallery"
 import BlogPostCard from "@/components/blog-post-card"
 import ContactForm from "@/components/contact-form"
 import ContentfulImage from "@/components/contentful-image"
@@ -12,6 +11,7 @@ import ContentfulFallback from "@/components/contentful-fallback"
 import ContentfulDebug from "@/components/contentful-debug"
 import { getHomepage, getAllBlogPosts, getFeaturedGalleryItems, getPhotographerInfo } from "@/lib/api"
 import { isContentfulConfigured } from "@/lib/contentful"
+import HomePageGallery from "@/components/homepage-gallery"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -262,7 +262,7 @@ export default async function Home() {
             </Button>
           </div>
 
-          <PhotoGallery items={featuredPhotos} />
+          <HomePageGallery items={featuredPhotos} />
         </div>
       </section>
 
