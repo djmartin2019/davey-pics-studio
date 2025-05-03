@@ -98,11 +98,17 @@ export async function getAllBlogPosts(): Promise<ContentfulBlogPost[]> {
 
       // Process each post to ensure image URLs are properly formatted
       return posts.map((post) => {
-        // Ensure coverPhoto URL has proper protocol
+        // Handle both coverPhoto and featuredImage fields
         if (post.fields?.coverPhoto?.fields?.file?.url) {
           const url = post.fields.coverPhoto.fields.file.url
           post.fields.coverPhoto.fields.file.url = url.startsWith("//") ? `https:${url}` : url
         }
+
+        if (post.fields?.featuredImage?.fields?.file?.url) {
+          const url = post.fields.featuredImage.fields.file.url
+          post.fields.featuredImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+        }
+
         return post
       })
     } catch (contentTypeError) {
@@ -636,6 +642,25 @@ function getSampleHomepage(): ContentfulHomepage {
           title: "Hero Image",
         },
       },
+      // Add sample heroImages array
+      heroImages: [
+        {
+          fields: {
+            file: {
+              url: "/placeholder.svg?key=hero-sample-1",
+            },
+            title: "Hero Image 1",
+          },
+        },
+        {
+          fields: {
+            file: {
+              url: "/placeholder.svg?key=hero-sample-2",
+            },
+            title: "Hero Image 2",
+          },
+        },
+      ],
       featuredGallery: null,
       featuredPosts: [],
     },

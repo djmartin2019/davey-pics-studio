@@ -113,9 +113,10 @@ export interface ContentfulHomepage {
   fields: {
     heroTitle: string
     heroSubtitle: string
-    heroImage: ContentfulImage
-    featuredGallery: ContentfulGalleryCollection
-    featuredPosts: ContentfulBlogPost[]
+    heroImage?: ContentfulImage // Keep for backward compatibility
+    heroImages?: ContentfulImage[] // New field for multiple images
+    featuredGallery?: ContentfulGalleryCollection
+    featuredPosts?: ContentfulBlogPost[]
   }
 }
 

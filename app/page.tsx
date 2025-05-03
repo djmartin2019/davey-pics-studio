@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import Image from "next/image"
 import { ArrowRight, Mail, MapPin } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -174,6 +173,29 @@ export default async function Home() {
   // Determine if we should show the Contentful error message
   const showContentfulError = contentfulError && process.env.NODE_ENV === "development"
 
+  // Select a random hero image if multiple are available
+  let heroImageUrl = "/placeholder.svg?key=5q8jl" // Default fallback
+  let heroImageTitle = "Wildlife Photography"
+
+  if (
+    homepage?.fields?.heroImages &&
+    Array.isArray(homepage.fields.heroImages) &&
+    homepage.fields.heroImages.length > 0
+  ) {
+    // Select a random image from the array
+    const randomIndex = Math.floor(Math.random() * homepage.fields.heroImages.length)
+    const randomImage = homepage.fields.heroImages[randomIndex]
+
+    if (randomImage?.fields?.file?.url) {
+      heroImageUrl = randomImage.fields.file.url
+      heroImageTitle = randomImage.fields.title || "Hero image"
+    }
+  } else if (homepage?.fields?.heroImage?.fields?.file?.url) {
+    // Fallback to single heroImage if heroImages array is not available
+    heroImageUrl = homepage.fields.heroImage.fields.file.url
+    heroImageTitle = homepage.fields.heroImage.fields.title || "Hero image"
+  }
+
   return (
     <main className="flex min-h-screen flex-col">
       {/* Show debug component in development */}
@@ -195,23 +217,13 @@ export default async function Home() {
       {/* Hero Section */}
       <section className="relative w-full h-[80vh] overflow-hidden">
         <div className="absolute inset-0 z-0">
-          {homepage?.fields?.heroImage?.fields?.file?.url ? (
-            <ContentfulImage
-              src={homepage.fields.heroImage.fields.file.url}
-              alt={homepage.fields.heroImage.fields.title || "Hero image"}
-              fill
-              priority
-              className="object-cover brightness-[0.6]"
-            />
-          ) : (
-            <Image
-              src="/placeholder.svg?key=5q8jl"
-              alt="Nighttime forest with birds"
-              fill
-              priority
-              className="object-cover brightness-[0.6]"
-            />
-          )}
+          <ContentfulImage
+            src={heroImageUrl}
+            alt={heroImageTitle}
+            fill
+            priority
+            className="object-cover brightness-[0.6]"
+          />
         </div>
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
           <div className="max-w-2xl space-y-6">
@@ -283,15 +295,17 @@ export default async function Home() {
               <BlogPostCard
                 key={post.sys.id}
                 title={post.fields.title}
-                excerpt={post.fields.excerpt}
-                date={new Date(post.fields.publishDate).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                excerpt={post.fields.excerpt || post.fields.body ? extractExcerpt(post.fields.body) : ""}
+                date={
+                  post.fields.date || post.fields.publishDate
+                    ? formatDate(post.fields.date || post.fields.publishDate)
+                    : ""
+                }
                 slug={post.fields.slug}
-                imageSrc={post.fields.featuredImage?.fields?.file?.url || ""}
-                tags={post.fields.categories?.map((category) => category.fields.name) || []}
+                imageSrc={
+                  post.fields.coverPhoto?.fields?.file?.url || post.fields.featuredImage?.fields?.file?.url || ""
+                }
+                tags={post.fields.tags || post.fields.categories?.map((category) => category.fields.name) || []}
               />
             ))}
           </div>
@@ -348,4 +362,46 @@ export default async function Home() {
       </section>
     </main>
   )
+}
+
+// Add this helper function at the bottom of the file if it doesn't exist
+function extractExcerpt(richText: any, maxLength = 150): string {
+  try {
+    // If it's a rich text document
+    if (richText?.nodeType === "document" && richText.content) {
+      // Find the first paragraph
+      const firstParagraph = richText.content.find((node: any) => node.nodeType === "paragraph")
+
+      if (firstParagraph && firstParagraph.content) {
+        // Extract text from the paragraph
+        const text = firstParagraph.content
+          .filter((node: any) => node.nodeType === "text")
+          .map((node: any) => node.value)
+          .join("")
+
+        // Truncate if needed
+        if (text.length > maxLength) {
+          return text.substring(0, maxLength) + "..."
+        }
+        return text
+      }
+    }
+    return ""
+  } catch (error) {
+    console.error("Error extracting excerpt:", error)
+    return ""
+  }
+}
+
+function formatDate(dateString: string): string {
+  try {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  } catch (error) {
+    console.error("Error formatting date:", error)
+    return ""
+  }
 }

@@ -49,7 +49,7 @@ export default function BlogPostCard({ title, excerpt, date, slug, imageSrc, tag
         <div>
           <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">{title}</h3>
           <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{excerpt}</p>
-          {date && (
+          {date && date !== "Invalid Date" && (
             <div className="flex items-center text-xs text-muted-foreground">
               <Calendar className="h-3 w-3 mr-1" />
               <span>{date}</span>

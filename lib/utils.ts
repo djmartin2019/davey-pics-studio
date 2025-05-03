@@ -12,7 +12,16 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function formatDate(dateString: string): string {
   try {
+    if (!dateString) return ""
+
     const date = new Date(dateString)
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn(`Invalid date string: ${dateString}`)
+      return ""
+    }
+
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -20,6 +29,6 @@ export function formatDate(dateString: string): string {
     })
   } catch (error) {
     console.error("Error formatting date:", error)
-    return dateString || ""
+    return ""
   }
 }
