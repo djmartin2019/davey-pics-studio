@@ -98,7 +98,7 @@ export default async function ServicePage({ params }: { params: { slug: string }
           <Button variant="outline" size="sm" asChild className="w-fit mb-6">
             <Link href="/services" className="flex items-center gap-2">
               <ArrowLeft size={16} />
-              Back to Publications & Prints
+              Back to Services
             </Link>
           </Button>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">{serviceName}</h1>
@@ -128,7 +128,7 @@ export default async function ServicePage({ params }: { params: { slug: string }
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              <h2 className="text-3xl font-bold mb-6">About {isPrintService ? "This Print" : "This Publication"}</h2>
+              <h2 className="text-3xl font-bold mb-6">About {isPrintService ? "Prints" : "Publications"}</h2>
 
               {detailedDescription && (
                 <div className="prose max-w-none mb-12">

@@ -215,9 +215,14 @@ export default async function Home() {
       </section>
 
       {/* Houston Area Photography Section - Centered Text */}
-      <section className="py-16 bg-gradient-to-b from-accent/5 to-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
+      <section className="py-16 relative border-y border-primary/10 dark:border-primary/20">
+        {/* Dynamic background that changes with theme */}
+        <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10 backdrop-blur-sm"></div>
+
+        {/* Content container with subtle shadow for depth */}
+        <div className="container relative z-10 mx-auto px-4">
+          <div className="max-w-3xl mx-auto bg-background/80 dark:bg-background/40 backdrop-blur-sm rounded-lg p-8 shadow-sm">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
             <h2 className="text-3xl font-bold mb-6">Houston Area Wildlife Photography</h2>
             <p className="text-lg mb-5 leading-relaxed">
               Based in Humble, Texas, I specialize in capturing the diverse bird and animal species found throughout the
@@ -229,11 +234,11 @@ export default async function Home() {
               incredible biodiversity of Southeast Texas. Each photograph represents hours of patience, technical
               precision, and a deep respect for nature's delicate balance.
             </p>
-            <div className="flex justify-center mt-8">
-              <Button asChild className="mx-2">
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
+              <Button asChild>
                 <Link href="/about">About the Photographer</Link>
               </Button>
-              <Button asChild variant="outline" className="mx-2">
+              <Button asChild variant="outline" className="border-primary/30 hover:bg-primary/5">
                 <Link href="/gallery">View Gallery</Link>
               </Button>
             </div>

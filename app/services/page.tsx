@@ -49,7 +49,7 @@ export default async function ServicesPage() {
           )}
         </div>
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">Publications & Prints</h1>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">My Services</h1>
           <p className="text-lg md:text-xl text-gray-200 max-w-2xl">
             Explore my wildlife photography publications and fine art print offerings
           </p>
