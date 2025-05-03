@@ -143,7 +143,7 @@ export default async function Home() {
   }
 
   // Default contact information if photographer data is not available
-  let contactEmail = "david@daveypics.studio"
+  let contactEmail = "daveypicsstudio@gmail.com"
   let contactLocation = "Houston, Texas"
 
   // Safely extract contact information
@@ -173,33 +173,19 @@ export default async function Home() {
   // Determine if we should show the Contentful error message
   const showContentfulError = contentfulError && process.env.NODE_ENV === "development"
 
-  // Select a random hero image if multiple are available
+  // Get the hero image URL from the single heroImage field
   let heroImageUrl = "/placeholder.svg?key=5q8jl" // Default fallback
   let heroImageTitle = "Wildlife Photography"
 
   // Log the homepage data to help debug
-  console.log("Homepage data - hero images:", {
+  console.log("Homepage data - hero image:", {
     hasHomepage: Boolean(homepage),
-    hasHeroImages: Boolean(homepage?.fields?.heroImages),
-    heroImagesLength: homepage?.fields?.heroImages?.length,
     hasHeroImage: Boolean(homepage?.fields?.heroImage),
+    heroImageUrl: homepage?.fields?.heroImage?.fields?.file?.url || "not available",
   })
 
-  if (
-    homepage?.fields?.heroImages &&
-    Array.isArray(homepage.fields.heroImages) &&
-    homepage.fields.heroImages.length > 0
-  ) {
-    // Select a random image from the array
-    const randomIndex = Math.floor(Math.random() * homepage.fields.heroImages.length)
-    const randomImage = homepage.fields.heroImages[randomIndex]
-
-    if (randomImage?.fields?.file?.url) {
-      heroImageUrl = randomImage.fields.file.url
-      heroImageTitle = randomImage.fields.title || "Hero image"
-    }
-  } else if (homepage?.fields?.heroImage?.fields?.file?.url) {
-    // Fallback to single heroImage if heroImages array is not available
+  // Use the single heroImage field
+  if (homepage?.fields?.heroImage?.fields?.file?.url) {
     heroImageUrl = homepage.fields.heroImage.fields.file.url
     heroImageTitle = homepage.fields.heroImage.fields.title || "Hero image"
   }

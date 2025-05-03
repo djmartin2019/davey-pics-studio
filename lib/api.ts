@@ -9,7 +9,7 @@ import type {
 } from "../types/contentful"
 import { getCachedData } from "./contentful-cache"
 
-// Update the getHomepage function to add more robust error handling
+// Update the getHomepage function to focus on the single heroImage
 export async function getHomepage(): Promise<ContentfulHomepage | null> {
   try {
     return await getCachedData(
@@ -44,25 +44,13 @@ export async function getHomepage(): Promise<ContentfulHomepage | null> {
           if (response.items && response.items.length > 0) {
             const homepage = response.items[0] as unknown as ContentfulHomepage
 
-            // Debug logging to help troubleshoot hero images
+            // Debug logging to help troubleshoot hero image
             console.log("Contentful homepage response:", {
-              hasHeroImages: Boolean(homepage.fields?.heroImages),
-              heroImagesCount: homepage.fields?.heroImages?.length || 0,
               hasHeroImage: Boolean(homepage.fields?.heroImage),
+              heroImageUrl: homepage.fields?.heroImage?.fields?.file?.url || "not available",
             })
 
-            // Process hero images to ensure URLs have proper protocol
-            if (homepage.fields?.heroImages && Array.isArray(homepage.fields.heroImages)) {
-              homepage.fields.heroImages = homepage.fields.heroImages.map((image) => {
-                if (image?.fields?.file?.url) {
-                  const url = image.fields.file.url
-                  image.fields.file.url = url.startsWith("//") ? `https:${url}` : url
-                }
-                return image
-              })
-            }
-
-            // Also process the single heroImage if it exists
+            // Process the single heroImage if it exists
             if (homepage.fields?.heroImage?.fields?.file?.url) {
               const url = homepage.fields.heroImage.fields.file.url
               homepage.fields.heroImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
@@ -652,7 +640,7 @@ function getSampleGalleryItems(): ContentfulGalleryItem[] {
   ] as unknown as ContentfulGalleryItem[]
 }
 
-// Add this helper function at the end of the file
+// Update the sample homepage to focus on the single heroImage
 function getSampleHomepage(): ContentfulHomepage {
   return {
     sys: { id: "sample-homepage" },
@@ -668,25 +656,6 @@ function getSampleHomepage(): ContentfulHomepage {
           title: "Hero Image",
         },
       },
-      // Add sample heroImages array
-      heroImages: [
-        {
-          fields: {
-            file: {
-              url: "/placeholder.svg?key=hero-sample-1",
-            },
-            title: "Hero Image 1",
-          },
-        },
-        {
-          fields: {
-            file: {
-              url: "/placeholder.svg?key=hero-sample-2",
-            },
-            title: "Hero Image 2",
-          },
-        },
-      ],
       featuredGallery: null,
       featuredPosts: [],
     },

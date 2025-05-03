@@ -115,16 +115,12 @@ export default function AboutPage() {
                 <h3 className="text-xl font-semibold mb-4">Camera Bodies</h3>
                 <ul className="space-y-2">
                   <li className="flex items-center justify-between">
-                    <span>Canon EOS R5</span>
+                    <span>Canon 90D</span>
                     <span className="text-muted-foreground">Primary</span>
                   </li>
                   <li className="flex items-center justify-between">
-                    <span>Canon EOS R6</span>
+                    <span>Canon Rebel T3i</span>
                     <span className="text-muted-foreground">Secondary</span>
-                  </li>
-                  <li className="flex items-center justify-between">
-                    <span>Canon 7D Mark II</span>
-                    <span className="text-muted-foreground">Backup</span>
                   </li>
                 </ul>
               </CardContent>
@@ -135,20 +131,16 @@ export default function AboutPage() {
                 <h3 className="text-xl font-semibold mb-4">Lenses</h3>
                 <ul className="space-y-2">
                   <li className="flex items-center justify-between">
-                    <span>Canon RF 100-500mm f/4.5-7.1L IS USM</span>
+                    <span>Sigma 150-600mm 5-6.3 Contemporary DG OS HSM Lens</span>
                     <span className="text-muted-foreground">Primary Telephoto</span>
                   </li>
                   <li className="flex items-center justify-between">
-                    <span>Canon RF 600mm f/11 IS STM</span>
-                    <span className="text-muted-foreground">Super Telephoto</span>
-                  </li>
-                  <li className="flex items-center justify-between">
-                    <span>Canon RF 24-70mm f/2.8L IS USM</span>
+                    <span>Canon EF-S 18-135mm f/3.5-5.6 IS Lens</span>
                     <span className="text-muted-foreground">Standard Zoom</span>
                   </li>
                   <li className="flex items-center justify-between">
-                    <span>Canon RF 100mm f/2.8L Macro IS USM</span>
-                    <span className="text-muted-foreground">Macro</span>
+                    <span>Canon EF 50mm f/1.8 STM Lens</span>
+                    <span className="text-muted-foreground">Landscape</span>
                   </li>
                 </ul>
               </CardContent>

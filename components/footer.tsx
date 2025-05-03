@@ -9,13 +9,14 @@ export default function Footer() {
   return (
     <footer className="bg-background border-t border-border/40">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Brand and Description */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2">
               <Camera className="h-6 w-6 text-primary" />
               <span className="font-bold text-lg">DaveyPics</span>
             </Link>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground max-w-md">
               Wildlife photography with a focus on Texas birds and web technology. Capturing nature through a tech lens.
             </p>
             <div className="flex items-center gap-4">
@@ -34,9 +35,10 @@ export default function Footer() {
             )}
           </div>
 
+          {/* Navigation Links */}
           <div>
             <h3 className="font-medium mb-4">Quick Links</h3>
-            <nav className="flex flex-col gap-2">
+            <nav className="grid grid-cols-2 gap-x-4 gap-y-2">
               <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Home
               </Link>
@@ -59,42 +61,6 @@ export default function Footer() {
               )}
             </nav>
           </div>
-
-          <div>
-            <h3 className="font-medium mb-4">Categories</h3>
-            <nav className="flex flex-col gap-2">
-              <Link
-                href="/blog/category/birds"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Bird Photography
-              </Link>
-              <Link
-                href="/blog/category/technology"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                NextJS & Technology
-              </Link>
-              <Link
-                href="/blog/category/conservation"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Conservation
-              </Link>
-              <Link
-                href="/blog/category/techniques"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Photography Techniques
-              </Link>
-              <Link
-                href="/blog/category/equipment"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Equipment Reviews
-              </Link>
-            </nav>
-          </div>
         </div>
 
         <Separator className="my-8" />
@@ -109,9 +75,6 @@ export default function Footer() {
             </Link>
             <Link href="/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               Terms of Service
-            </Link>
-            <Link href="/cookies" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              Cookie Policy
             </Link>
           </div>
         </div>
