@@ -6,8 +6,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
-import EnvChecker from "@/components/env-checker"
-import EnvStatus from "@/components/env-status" // Add this import
+import EnvStatus from "@/components/env-status"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -31,8 +30,7 @@ export default function RootLayout({
             <Navbar />
             <div className="pt-16">{children}</div>
             <Footer />
-            <EnvChecker />
-            <EnvStatus /> {/* Add this component */}
+            <EnvStatus /> {/* Environment variable status indicator */}
           </div>
         </ThemeProvider>
       </body>

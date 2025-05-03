@@ -6,7 +6,9 @@ import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import PhotoGallery from "@/components/photo-gallery"
 import ContentfulImage from "@/components/contentful-image"
+import ContentfulDebugImage from "@/components/contentful-debug-image"
 import { getGalleryCollectionBySlug, getAllGalleryCollections } from "@/lib/api"
+import { getContentfulField } from "@/lib/contentful-utils"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -41,22 +43,28 @@ export default async function GalleryCollectionPage({ params }: { params: { slug
     notFound()
   }
 
+  // Ensure photos array is always defined
+  const photos = getContentfulField(collection, "fields.photos", [])
+
+  // Get cover image URL safely
+  const coverImageUrl = getContentfulField(collection, "fields.coverImage.fields.file.url", "")
+
+  // Only show debug component in development
+  const showDebugInfo = process.env.NODE_ENV === "development"
+
   return (
     <main className="flex min-h-screen flex-col">
       {/* Hero Section */}
       <section className="relative w-full h-[50vh] overflow-hidden">
         <div className="absolute inset-0 z-0">
-          {collection.fields.coverImage ? (
-            <ContentfulImage
-              src={collection.fields.coverImage.fields.file.url}
-              alt={collection.fields.title}
-              fill
-              priority
-              className="object-cover brightness-[0.7]"
-            />
-          ) : (
-            <div className="w-full h-full bg-accent/20" />
-          )}
+          <ContentfulImage
+            src={coverImageUrl}
+            alt={collection.fields.title}
+            fill
+            priority
+            className="object-cover brightness-[0.7]"
+            fallbackSrc="/placeholder.svg?key=wl7p2"
+          />
         </div>
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-end pb-12">
           <Button variant="ghost" asChild className="text-white mb-6 w-fit">
@@ -72,10 +80,17 @@ export default async function GalleryCollectionPage({ params }: { params: { slug
         </div>
       </section>
 
+      {/* Debug information in development */}
+      {showDebugInfo && (
+        <div className="container mx-auto px-4 mt-4">
+          <ContentfulDebugImage imageUrl={coverImageUrl} alt={`Cover image for ${collection.fields.title}`} />
+        </div>
+      )}
+
       {/* Gallery */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <PhotoGallery items={collection.fields.photos || []} />
+          <PhotoGallery items={photos} />
         </div>
       </section>
     </main>
