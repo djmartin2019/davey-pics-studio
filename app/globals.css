@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 220 10% 10%;
+
+    --card: 220 20% 97%;
+    --card-foreground: 220 10% 10%;
+
+    --popover: 220 20% 97%;
+    --popover-foreground: 220 10% 10%;
+
+    --primary: 220 60% 50%;
+    --primary-foreground: 220 10% 98%;
+
+    --secondary: 220 5% 90%;
+    --secondary-foreground: 220 10% 10%;
+
+    --muted: 220 5% 90%;
+    --muted-foreground: 220 10% 40%;
+
+    --accent: 220 15% 90%;
+    --accent-foreground: 220 60% 45%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 10% 85%;
+    --input: 220 10% 85%;
+    --ring: 220 60% 50%;
+
+    --radius: 0.5rem;
+
+    --chart-1: 220 60% 50%;
+    --chart-2: 180 70% 45%;
+    --chart-3: 280 70% 50%;
+    --chart-4: 30 80% 55%;
+    --chart-5: 120 60% 45%;
+  }
+
+  .dark {
+    --background: 220 30% 10%;
+    --foreground: 220 10% 98%;
+
+    --card: 220 30% 12%;
+    --card-foreground: 220 10% 98%;
+
+    --popover: 220 30% 12%;
+    --popover-foreground: 220 10% 98%;
+
+    --primary: 220 60% 60%;
+    --primary-foreground: 220 10% 98%;
+
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 220 10% 98%;
+
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 10% 70%;
+
+    --accent: 220 30% 20%;
+    --accent-foreground: 220 60% 70%;
+
+    --destructive: 0 74% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 30% 20%;
+    --input: 220 30% 20%;
+    --ring: 220 60% 60%;
+
+    --chart-1: 220 60% 60%;
+    --chart-2: 180 70% 55%;
+    --chart-3: 280 70% 60%;
+    --chart-4: 30 80% 65%;
+    --chart-5: 120 60% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Add custom styles for the prose content in blog posts */
+.prose {
+  @apply max-w-none;
+}
+
+.prose h2 {
+  @apply text-2xl font-bold mt-8 mb-4;
+}
+
+.prose h3 {
+  @apply text-xl font-semibold mt-6 mb-3;
+}
+
+.prose p {
+  @apply mb-4;
+}
+
+.prose ul {
+  @apply mb-4 list-disc pl-6;
+}
+
+.prose li {
+  @apply mb-2;
+}
+
+.prose a {
+  @apply text-primary hover:underline;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary/30 pl-4 italic my-6;
+}
+
+.prose code {
+  @apply bg-muted px-1 py-0.5 rounded text-sm;
+}
+
+.prose pre {
+  @apply bg-muted p-4 rounded-lg overflow-x-auto my-6;
+}
+
+.prose img {
+  @apply rounded-lg my-8;
+}
