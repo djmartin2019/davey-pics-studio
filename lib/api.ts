@@ -42,7 +42,33 @@ export async function getHomepage(): Promise<ContentfulHomepage | null> {
           })
 
           if (response.items && response.items.length > 0) {
-            return response.items[0] as unknown as ContentfulHomepage
+            const homepage = response.items[0] as unknown as ContentfulHomepage
+
+            // Debug logging to help troubleshoot hero images
+            console.log("Contentful homepage response:", {
+              hasHeroImages: Boolean(homepage.fields?.heroImages),
+              heroImagesCount: homepage.fields?.heroImages?.length || 0,
+              hasHeroImage: Boolean(homepage.fields?.heroImage),
+            })
+
+            // Process hero images to ensure URLs have proper protocol
+            if (homepage.fields?.heroImages && Array.isArray(homepage.fields.heroImages)) {
+              homepage.fields.heroImages = homepage.fields.heroImages.map((image) => {
+                if (image?.fields?.file?.url) {
+                  const url = image.fields.file.url
+                  image.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+                }
+                return image
+              })
+            }
+
+            // Also process the single heroImage if it exists
+            if (homepage.fields?.heroImage?.fields?.file?.url) {
+              const url = homepage.fields.heroImage.fields.file.url
+              homepage.fields.heroImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+
+            return homepage
           }
           return getSampleHomepage()
         } catch (contentTypeError) {

@@ -41,6 +41,17 @@ export default function ContentfulImage({
     fallback: fallbackSrc,
   })
 
+  // Add debug logging in development
+  if (process.env.NODE_ENV === "development") {
+    console.log(`ContentfulImage: ${alt}`, {
+      originalSrc: src,
+      processedSrc,
+      width,
+      height,
+      quality,
+    })
+  }
+
   // Use useEffect to mark when component is mounted on client
   useEffect(() => {
     setIsLoaded(true)

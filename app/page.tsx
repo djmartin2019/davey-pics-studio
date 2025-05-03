@@ -177,6 +177,14 @@ export default async function Home() {
   let heroImageUrl = "/placeholder.svg?key=5q8jl" // Default fallback
   let heroImageTitle = "Wildlife Photography"
 
+  // Log the homepage data to help debug
+  console.log("Homepage data - hero images:", {
+    hasHomepage: Boolean(homepage),
+    hasHeroImages: Boolean(homepage?.fields?.heroImages),
+    heroImagesLength: homepage?.fields?.heroImages?.length,
+    hasHeroImage: Boolean(homepage?.fields?.heroImage),
+  })
+
   if (
     homepage?.fields?.heroImages &&
     Array.isArray(homepage.fields.heroImages) &&
