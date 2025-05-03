@@ -58,14 +58,11 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
-    "@rrweb/types": "latest",
-    "rrweb-snapshot": "latest",
     "@tailwindcss/typography": "latest",
     "nodemailer": "latest",
     "@contentful/rich-text-react-renderer": "latest",
     "@contentful/rich-text-types": "latest",
-    "contentful": "latest",
-    "posthog-js": "latest"
+    "contentful": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

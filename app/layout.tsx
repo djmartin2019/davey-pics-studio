@@ -7,9 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { JsonLd } from "@/components/json-ld"
-import { PHProvider } from "@/lib/posthog-client"
-import { Analytics } from "@/components/analytics-client"
-import { Suspense } from "react"
+import Script from "next/script"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -69,52 +67,72 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="canonical" href="https://daveypicsstudio.com" />
+        <Script id="posthog-script" strategy="afterInteractive">
+          {`
+            !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+            
+            // Fetch configuration from server
+            fetch('/api/site-config')
+              .then(response => response.json())
+              .then(config => {
+                if (config.analyticsKey && config.analyticsHost) {
+                  posthog.init(config.analyticsKey, {
+                    api_host: config.analyticsHost,
+                    capture_pageview: true,
+                    autocapture: true,
+                    session_recording: {
+                      maskAllInputs: false
+                    }
+                  });
+                  console.log('Analytics initialized successfully');
+                }
+              })
+              .catch(error => {
+                console.error('Failed to initialize analytics:', error);
+              });
+          `}
+        </Script>
       </head>
       <body className={inter.className}>
-        <PHProvider>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-            <JsonLd
-              data={{
-                "@context": "https://schema.org",
-                "@type": "ProfessionalService",
-                name: "David Martin Photography",
-                description:
-                  "Houston wildlife photography by David Martin, specializing in Texas birds and wildlife photography.",
-                url: "https://daveypicsstudio.com",
-                telephone: "+12815551234",
-                address: {
-                  "@type": "PostalAddress",
-                  streetAddress: "123 Wildlife Way",
-                  addressLocality: "Humble",
-                  addressRegion: "TX",
-                  postalCode: "77338",
-                  addressCountry: "US",
-                },
-                geo: {
-                  "@type": "GeoCoordinates",
-                  latitude: 29.9988,
-                  longitude: -95.2622,
-                },
-                priceRange: "$$",
-                openingHoursSpecification: {
-                  "@type": "OpeningHoursSpecification",
-                  dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                  opens: "09:00",
-                  closes: "17:00",
-                },
-                sameAs: ["https://www.instagram.com/davey.pics/", "https://www.facebook.com/daveypicsstudio"],
-              }}
-            />
-            <div className="flex flex-col min-h-screen">
-              <Navbar />
-              <Suspense>
-                <div className="pt-16">{children}</div>
-              </Suspense>
-              <Footer />
-            </div>
-            <Analytics />
-          </ThemeProvider>
-        </PHProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "ProfessionalService",
+              name: "David Martin Photography",
+              description:
+                "Houston wildlife photography by David Martin, specializing in Texas birds and wildlife photography.",
+              url: "https://daveypicsstudio.com",
+              telephone: "+12815551234",
+              address: {
+                "@type": "PostalAddress",
+                streetAddress: "123 Wildlife Way",
+                addressLocality: "Humble",
+                addressRegion: "TX",
+                postalCode: "77338",
+                addressCountry: "US",
+              },
+              geo: {
+                "@type": "GeoCoordinates",
+                latitude: 29.9988,
+                longitude: -95.2622,
+              },
+              priceRange: "$$",
+              openingHoursSpecification: {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                opens: "09:00",
+                closes: "17:00",
+              },
+              sameAs: ["https://www.instagram.com/davey.pics/", "https://www.facebook.com/daveypicsstudio"],
+            }}
+          />
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <div className="pt-16">{children}</div>
+            <Footer />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   )
