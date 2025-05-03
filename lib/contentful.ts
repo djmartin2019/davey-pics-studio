@@ -1,38 +1,7 @@
-import { createClient } from "contentful"
+import { getContentfulClient, isContentfulConfigured } from "./contentful-client"
 
-// Check if required environment variables are defined
-const spaceId = process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID
-const accessToken = process.env.CONTENTFUL_ACCESS_TOKEN
-
-if (!spaceId || !accessToken) {
-  console.error(
-    "Warning: Missing required Contentful environment variables. Please make sure NEXT_PUBLIC_CONTENTFUL_SPACE_ID and CONTENTFUL_ACCESS_TOKEN are set.",
-  )
-}
-
-// Create a Contentful client for fetching data
-export const contentfulClient = createClient({
-  space: spaceId || "",
-  accessToken: accessToken || "",
-  // Add error handling for failed requests
-  errorLogger: (error) => {
-    console.error("Contentful Error:", error.message)
-    console.error("Error details:", {
-      status: error.status,
-      statusText: error.statusText,
-      details: error.details,
-      request: {
-        url: error.request?.url,
-        method: error.request?.method,
-      },
-    })
-  },
-})
-
-// Helper function to check if Contentful client is properly configured
-export const isContentfulConfigured = () => {
-  return Boolean(spaceId && accessToken)
-}
+// Re-export the client functions
+export { getContentfulClient, isContentfulConfigured }
 
 // Helper function to parse Contentful rich text
 export const parseContentfulRichText = (richText: any) => {

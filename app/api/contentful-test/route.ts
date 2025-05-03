@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "contentful"
+import { getContentfulClient, isContentfulConfigured } from "@/lib/contentful"
 
 export async function GET() {
   const spaceId = process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID
@@ -21,7 +21,7 @@ export async function GET() {
   }
 
   // If environment variables are missing, return early
-  if (!spaceId || !accessToken) {
+  if (!isContentfulConfigured()) {
     return NextResponse.json({
       ...results,
       connection: {
@@ -32,11 +32,8 @@ export async function GET() {
   }
 
   try {
-    // Create Contentful client
-    const client = createClient({
-      space: spaceId,
-      accessToken: accessToken,
-    })
+    // Get Contentful client
+    const client = getContentfulClient()
 
     // Test connection by getting content types
     const contentTypesResponse = await client.getContentTypes()

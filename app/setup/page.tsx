@@ -4,6 +4,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2, AlertCircle, ArrowRight, Mail } from "lucide-react"
+import ContentfulDiagnostics from "@/components/contentful-diagnostics"
+import EnvVariableChecker from "@/components/env-variable-checker"
+import ContentfulConnectionStatus from "@/components/contentful-connection-status"
 
 export default function SetupPage() {
   const spaceId = process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID
@@ -14,42 +17,10 @@ export default function SetupPage() {
     <div className="container mx-auto py-12 px-4">
       <h1 className="text-3xl font-bold mb-6">Setup Guide</h1>
 
+      <EnvVariableChecker />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <Alert className={spaceId && accessToken ? "bg-green-100 border-green-500" : "bg-yellow-100 border-yellow-500"}>
-          <AlertTitle>
-            {spaceId && accessToken ? (
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                Contentful Variables Detected
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-yellow-600" />
-                Contentful Variables Not Configured
-              </span>
-            )}
-          </AlertTitle>
-          <AlertDescription>
-            <div className="mt-2">
-              <p>
-                NEXT_PUBLIC_CONTENTFUL_SPACE_ID:{" "}
-                {spaceId ? (
-                  <span className="text-green-600 font-medium">✅ Set</span>
-                ) : (
-                  <span className="text-red-600 font-medium">❌ Not set</span>
-                )}
-              </p>
-              <p>
-                CONTENTFUL_ACCESS_TOKEN:{" "}
-                {accessToken ? (
-                  <span className="text-green-600 font-medium">✅ Set</span>
-                ) : (
-                  <span className="text-red-600 font-medium">❌ Not set</span>
-                )}
-              </p>
-            </div>
-          </AlertDescription>
-        </Alert>
+        <ContentfulConnectionStatus />
 
         <Alert className={emailPassword ? "bg-green-100 border-green-500" : "bg-yellow-100 border-yellow-500"}>
           <AlertTitle>
@@ -85,6 +56,8 @@ export default function SetupPage() {
           </AlertDescription>
         </Alert>
       </div>
+
+      <ContentfulDiagnostics />
 
       <Tabs defaultValue="local" className="mt-8">
         <TabsList>

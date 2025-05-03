@@ -12,6 +12,7 @@ import ContentfulImage from "@/components/contentful-image"
 import ContentfulFallback from "@/components/contentful-fallback"
 import ContentfulDebug from "@/components/contentful-debug"
 import { getHomepage, getAllBlogPosts, getFeaturedGalleryItems, getPhotographerInfo } from "@/lib/api"
+import { isContentfulConfigured } from "@/lib/contentful"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -19,8 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const homepage = await getHomepage()
 
   return {
-    title: homepage?.fields.heroTitle || "Wildlife Photography",
-    description: homepage?.fields.heroSubtitle || "Wildlife photography by David Martin",
+    title: homepage?.fields?.heroTitle || "Wildlife Photography",
+    description: homepage?.fields?.heroSubtitle || "Wildlife photography by David Martin",
   }
 }
 
@@ -95,12 +96,20 @@ const sampleGalleryItems = [
 ]
 
 export default async function Home() {
-  // Wrap Contentful data fetching in try/catch blocks
+  // Initialize variables for content
   let homepage = null
-  let featuredPosts = []
-  let featuredPhotos = []
+  let featuredPosts = sampleBlogPosts
+  let featuredPhotos = sampleGalleryItems
   let photographer = null
   let contentfulError = null
+  const isConfigured = isContentfulConfigured()
+
+  // Log environment status
+  console.log("Home page - Contentful configuration status:", {
+    isConfigured,
+    nodeEnv: process.env.NODE_ENV,
+    vercelEnv: process.env.VERCEL_ENV,
+  })
 
   try {
     homepage = await getHomepage()
@@ -112,24 +121,20 @@ export default async function Home() {
   try {
     // Get the 3 most recent blog posts from Contentful
     const allPosts = await getAllBlogPosts()
-    featuredPosts = allPosts.slice(0, 3) // Get the 3 most recent posts
-
-    if (featuredPosts.length === 0) {
-      featuredPosts = sampleBlogPosts
+    if (allPosts && allPosts.length > 0) {
+      featuredPosts = allPosts.slice(0, 3) // Get the 3 most recent posts
     }
   } catch (error) {
     console.error("Error fetching blog posts:", error)
-    featuredPosts = sampleBlogPosts
   }
 
   try {
-    featuredPhotos = await getFeaturedGalleryItems(6)
-    if (featuredPhotos.length === 0) {
-      featuredPhotos = sampleGalleryItems
+    const galleryItems = await getFeaturedGalleryItems(6)
+    if (galleryItems && galleryItems.length > 0) {
+      featuredPhotos = galleryItems
     }
   } catch (error) {
     console.error("Error fetching gallery items:", error)
-    featuredPhotos = sampleGalleryItems
   }
 
   try {
@@ -137,6 +142,9 @@ export default async function Home() {
   } catch (error) {
     console.error("Error fetching photographer info:", error)
   }
+
+  // Determine if we should show the Contentful error message
+  const showContentfulError = contentfulError && process.env.NODE_ENV === "development"
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -148,7 +156,7 @@ export default async function Home() {
       )}
 
       {/* Show error message if there was a problem with Contentful */}
-      {contentfulError && (
+      {showContentfulError && (
         <div className="container mx-auto px-4 mt-8">
           <ContentfulFallback message={`Unable to load content from Contentful: ${contentfulError}`}>
             <p className="mt-4">Using sample data as fallback.</p>
@@ -159,10 +167,10 @@ export default async function Home() {
       {/* Hero Section */}
       <section className="relative w-full h-[80vh] overflow-hidden">
         <div className="absolute inset-0 z-0">
-          {homepage?.fields.heroImage ? (
+          {homepage?.fields?.heroImage?.fields?.file?.url ? (
             <ContentfulImage
               src={homepage.fields.heroImage.fields.file.url}
-              alt={homepage.fields.heroImage.fields.title}
+              alt={homepage.fields.heroImage.fields.title || "Hero image"}
               fill
               priority
               className="object-cover brightness-[0.6]"
@@ -180,10 +188,10 @@ export default async function Home() {
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
           <div className="max-w-2xl space-y-6">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white">
-              {homepage?.fields.heroTitle || "Capturing Nature Through a Tech Lens"}
+              {homepage?.fields?.heroTitle || "Capturing Nature Through a Tech Lens"}
             </h1>
             <p className="text-lg md:text-xl text-gray-200">
-              {homepage?.fields.heroSubtitle ||
+              {homepage?.fields?.heroSubtitle ||
                 "Wildlife photography by David Martin, specializing in avian subjects from the diverse ecosystems of Texas, powered by a passion for both nature and web technology."}
             </p>
             <div className="flex flex-wrap gap-4">
@@ -254,7 +262,7 @@ export default async function Home() {
                   day: "numeric",
                 })}
                 slug={post.fields.slug}
-                imageSrc={post.fields.featuredImage?.fields.file.url || ""}
+                imageSrc={post.fields.featuredImage?.fields?.file?.url || ""}
                 tags={post.fields.categories?.map((category) => category.fields.name) || []}
               />
             ))}
@@ -276,11 +284,11 @@ export default async function Home() {
               <div className="space-y-4 mb-8">
                 <div className="flex items-center gap-3">
                   <Mail className="text-primary h-5 w-5" />
-                  <span>{photographer?.fields.email || "david@daveypics.studio"}</span>
+                  <span>{photographer?.fields?.email || "david@daveypics.studio"}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin className="text-primary h-5 w-5" />
-                  <span>{photographer?.fields.location || "Houston, Texas"}</span>
+                  <span>{photographer?.fields?.location || "Houston, Texas"}</span>
                 </div>
               </div>
 

@@ -1,4 +1,4 @@
-import { contentfulClient } from "./contentful"
+import { getContentfulClient } from "./contentful"
 import type {
   ContentfulBlogPost,
   ContentfulGalleryItem,
@@ -8,26 +8,29 @@ import type {
   ContentfulCategory,
   ContentfulAuthor,
 } from "../types/contentful"
+import { getCachedData } from "./contentful-cache"
 
 // Fetch homepage data
 export async function getHomepage(): Promise<ContentfulHomepage | null> {
   try {
-    // Check if client is properly configured
-    if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
-      console.error("Contentful environment variables are not configured properly")
-      return null
-    }
+    return await getCachedData(
+      "homepage",
+      async () => {
+        const client = getContentfulClient()
 
-    const response = await contentfulClient.getEntries({
-      content_type: "homepage",
-      include: 3, // Include 3 levels of nested references
-      limit: 1,
-    })
+        const response = await client.getEntries({
+          content_type: "homepage",
+          include: 3, // Include 3 levels of nested references
+          limit: 1,
+        })
 
-    if (response.items.length > 0) {
-      return response.items[0] as unknown as ContentfulHomepage
-    }
-    return null
+        if (response.items.length > 0) {
+          return response.items[0] as unknown as ContentfulHomepage
+        }
+        return null
+      },
+      5 * 60 * 1000, // 5 minutes cache
+    )
   } catch (error) {
     console.error("Error fetching homepage:", error)
     return null
@@ -37,12 +40,9 @@ export async function getHomepage(): Promise<ContentfulHomepage | null> {
 // Fetch about page data
 export async function getAboutPage(): Promise<ContentfulAboutPage | null> {
   try {
-    // Check if client is properly configured
-    if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
-      console.error("Contentful environment variables are not configured properly")
-      return null
-    }
-    const response = await contentfulClient.getEntries({
+    const client = getContentfulClient()
+
+    const response = await client.getEntries({
       content_type: "aboutPage",
       include: 2,
       limit: 1,
@@ -61,12 +61,9 @@ export async function getAboutPage(): Promise<ContentfulAboutPage | null> {
 // Fetch all blog posts
 export async function getAllBlogPosts(): Promise<ContentfulBlogPost[]> {
   try {
-    // Check if client is properly configured
-    if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
-      console.error("Contentful environment variables are not configured properly")
-      return []
-    }
-    const response = await contentfulClient.getEntries({
+    const client = getContentfulClient()
+
+    const response = await client.getEntries({
       content_type: "blogPost",
       order: "-fields.publishDate", // Sort by publish date in descending order
       include: 2,
@@ -82,12 +79,9 @@ export async function getAllBlogPosts(): Promise<ContentfulBlogPost[]> {
 // Fetch a single blog post by slug
 export async function getBlogPostBySlug(slug: string): Promise<ContentfulBlogPost | null> {
   try {
-    // Check if client is properly configured
-    if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
-      console.error("Contentful environment variables are not configured properly")
-      return null
-    }
-    const response = await contentfulClient.getEntries({
+    const client = getContentfulClient()
+
+    const response = await client.getEntries({
       content_type: "blogPost",
       "fields.slug": slug,
       include: 3, // Include related posts
@@ -106,12 +100,9 @@ export async function getBlogPostBySlug(slug: string): Promise<ContentfulBlogPos
 // Fetch all gallery collections
 export async function getAllGalleryCollections(): Promise<ContentfulGalleryCollection[]> {
   try {
-    // Check if client is properly configured
-    if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
-      console.error("Contentful environment variables are not configured properly")
-      return []
-    }
-    const response = await contentfulClient.getEntries({
+    const client = getContentfulClient()
+
+    const response = await client.getEntries({
       content_type: "galleryCollection",
       include: 1,
     })
@@ -126,12 +117,9 @@ export async function getAllGalleryCollections(): Promise<ContentfulGalleryColle
 // Fetch a single gallery collection by slug
 export async function getGalleryCollectionBySlug(slug: string): Promise<ContentfulGalleryCollection | null> {
   try {
-    // Check if client is properly configured
-    if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
-      console.error("Contentful environment variables are not configured properly")
-      return null
-    }
-    const response = await contentfulClient.getEntries({
+    const client = getContentfulClient()
+
+    const response = await client.getEntries({
       content_type: "galleryCollection",
       "fields.slug": slug,
       include: 2,
@@ -150,14 +138,10 @@ export async function getGalleryCollectionBySlug(slug: string): Promise<Contentf
 // Fetch featured gallery items
 export async function getFeaturedGalleryItems(limit = 6): Promise<ContentfulGalleryItem[]> {
   try {
-    // Check if client is properly configured
-    if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
-      console.error("Contentful environment variables are not configured properly")
-      return []
-    }
+    const client = getContentfulClient()
 
     // First try to get featured items
-    const featuredResponse = await contentfulClient.getEntries({
+    const featuredResponse = await client.getEntries({
       content_type: "galleryItem",
       "fields.featured": true,
       include: 2,
@@ -166,7 +150,7 @@ export async function getFeaturedGalleryItems(limit = 6): Promise<ContentfulGall
 
     // If no featured items, get the most recent items
     if (featuredResponse.items.length === 0) {
-      const response = await contentfulClient.getEntries({
+      const response = await client.getEntries({
         content_type: "galleryItem",
         order: "-sys.createdAt",
         include: 2,
@@ -185,16 +169,19 @@ export async function getFeaturedGalleryItems(limit = 6): Promise<ContentfulGall
 // Fetch all categories
 export async function getAllCategories(): Promise<ContentfulCategory[]> {
   try {
-    // Check if client is properly configured
-    if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
-      console.error("Contentful environment variables are not configured properly")
-      return []
-    }
-    const response = await contentfulClient.getEntries({
-      content_type: "category",
-    })
+    return await getCachedData(
+      "all-categories",
+      async () => {
+        const client = getContentfulClient()
 
-    return response.items as unknown as ContentfulCategory[]
+        const response = await client.getEntries({
+          content_type: "category",
+        })
+
+        return response.items as unknown as ContentfulCategory[]
+      },
+      30 * 60 * 1000, // 30 minutes cache
+    )
   } catch (error) {
     console.error("Error fetching categories:", error)
     return []
@@ -204,13 +191,10 @@ export async function getAllCategories(): Promise<ContentfulCategory[]> {
 // Fetch blog posts by category
 export async function getBlogPostsByCategory(categorySlug: string): Promise<ContentfulBlogPost[]> {
   try {
-    // Check if client is properly configured
-    if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
-      console.error("Contentful environment variables are not configured properly")
-      return []
-    }
+    const client = getContentfulClient()
+
     // First, get the category
-    const categoryResponse = await contentfulClient.getEntries({
+    const categoryResponse = await client.getEntries({
       content_type: "category",
       "fields.slug": categorySlug,
     })
@@ -222,7 +206,7 @@ export async function getBlogPostsByCategory(categorySlug: string): Promise<Cont
     const categoryId = categoryResponse.items[0].sys.id
 
     // Then, get posts with this category
-    const response = await contentfulClient.getEntries({
+    const response = await client.getEntries({
       content_type: "blogPost",
       "fields.categories.sys.id": categoryId,
       order: "-fields.publishDate",
@@ -239,12 +223,9 @@ export async function getBlogPostsByCategory(categorySlug: string): Promise<Cont
 // Fetch the photographer's information
 export async function getPhotographerInfo(): Promise<ContentfulAuthor | null> {
   try {
-    // Check if client is properly configured
-    if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
-      console.error("Contentful environment variables are not configured properly")
-      return null
-    }
-    const response = await contentfulClient.getEntries({
+    const client = getContentfulClient()
+
+    const response = await client.getEntries({
       content_type: "author",
       limit: 1,
     })
