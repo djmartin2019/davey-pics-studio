@@ -1,55 +1,32 @@
 import { createClient } from "contentful"
 
 // Cache for Contentful client instance
-let contentfulClientInstance: ReturnType<typeof createClient> | null = null
+const contentfulClientInstance: ReturnType<typeof createClient> | null = null
 let mockClientInstance: any = null
-let lastInitAttempt = 0
+const lastInitAttempt = 0
 const INIT_COOLDOWN = 5000 // 5 seconds between initialization attempts
 
 // Create a function to get the Contentful client
 export function getContentfulClient() {
-  // Check if we already have an instance and it's not time to retry yet
-  if (contentfulClientInstance && Date.now() - lastInitAttempt < INIT_COOLDOWN) {
-    return contentfulClientInstance
-  }
-
-  // Update the last initialization attempt time
-  lastInitAttempt = Date.now()
-
-  // Access environment variables directly each time to ensure we get the latest values
+  // Get environment variables
   const spaceId = process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID
   const accessToken = process.env.CONTENTFUL_ACCESS_TOKEN
 
-  // Log environment variable status (without exposing values)
-  console.log("Contentful client initialization attempt:", {
-    spaceIdDefined: Boolean(spaceId),
-    accessTokenDefined: Boolean(accessToken),
-    nodeEnv: process.env.NODE_ENV,
-    vercelEnv: process.env.VERCEL_ENV || "unknown",
-    timestamp: new Date().toISOString(),
-  })
-
-  // If environment variables are missing, return a mock client
+  // Check if environment variables are defined
   if (!spaceId || !accessToken) {
-    console.warn("Contentful environment variables missing, using mock client")
-    return getMockClient()
+    console.error("Missing Contentful credentials:", {
+      hasSpaceId: Boolean(spaceId),
+      hasAccessToken: Boolean(accessToken),
+    })
+    throw new Error("Missing Contentful credentials")
   }
 
-  // Create a new client instance
-  try {
-    contentfulClientInstance = createClient({
-      space: spaceId,
-      accessToken: accessToken,
-      // Add error handling for failed requests
-      errorLogger: (error) => {
-        console.error("Contentful Error:", error.message)
-      },
-    })
-    return contentfulClientInstance
-  } catch (error) {
-    console.error("Failed to initialize Contentful client:", error)
-    return getMockClient()
-  }
+  // Create and return the client
+  return createClient({
+    space: spaceId,
+    accessToken: accessToken,
+    environment: "master", // or your custom environment
+  })
 }
 
 // Create a mock client that returns empty data instead of throwing errors

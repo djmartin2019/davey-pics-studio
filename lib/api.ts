@@ -6,6 +6,8 @@ import type {
   ContentfulHomepage,
   ContentfulCategory,
   ContentfulAuthor,
+  ContentfulPark,
+  ContentfulService,
 } from "../types/contentful"
 import { getCachedData } from "./contentful-cache"
 
@@ -44,16 +46,25 @@ export async function getHomepage(): Promise<ContentfulHomepage | null> {
           if (response.items && response.items.length > 0) {
             const homepage = response.items[0] as unknown as ContentfulHomepage
 
-            // Debug logging to help troubleshoot hero image
+            // Debug logging to help troubleshoot hero image and process image
             console.log("Contentful homepage response:", {
               hasHeroImage: Boolean(homepage.fields?.heroImage),
               heroImageUrl: homepage.fields?.heroImage?.fields?.file?.url || "not available",
+              hasProcessImage: Boolean(homepage.fields?.processImage),
+              processImageUrl: homepage.fields?.processImage?.fields?.file?.url || "not available",
+              allFields: Object.keys(homepage.fields || {}),
             })
 
             // Process the single heroImage if it exists
             if (homepage.fields?.heroImage?.fields?.file?.url) {
               const url = homepage.fields.heroImage.fields.file.url
               homepage.fields.heroImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+
+            // Process the processImage if it exists
+            if (homepage.fields?.processImage?.fields?.file?.url) {
+              const url = homepage.fields.processImage.fields.file.url
+              homepage.fields.processImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
             }
 
             return homepage
@@ -765,6 +776,14 @@ function getSampleHomepage(): ContentfulHomepage {
           title: "Hero Image",
         },
       },
+      processImage: {
+        fields: {
+          file: {
+            url: "/placeholder.svg?key=process-image-sample",
+          },
+          title: "Process Image",
+        },
+      },
       featuredGallery: null,
       featuredPosts: [],
     },
@@ -872,4 +891,472 @@ function getSampleCategories(): ContentfulCategory[] {
       fields: { name: "Landscapes", slug: "landscapes", description: "Landscape photography" },
     },
   ] as unknown as ContentfulCategory[]
+}
+
+// Add these functions at the end of your api.ts file
+
+// Fetch all parks
+export async function getAllParks(): Promise<ContentfulPark[]> {
+  try {
+    return await getCachedData(
+      "all-parks",
+      async () => {
+        const client = getContentfulClient()
+
+        // First check if the content type exists
+        try {
+          const contentTypesResponse = await client.getContentTypes({
+            "sys.id": "park",
+          })
+
+          // If the content type doesn't exist, return empty array
+          if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
+            console.warn("Content type 'park' not found in Contentful space.")
+            return []
+          }
+
+          const response = await client.getEntries({
+            content_type: "park",
+            order: "fields.parkName",
+            include: 2,
+          })
+
+          if (!response.items) {
+            return []
+          }
+
+          // Process parks to ensure image URLs are properly formatted
+          const parks = response.items as unknown as ContentfulPark[]
+          return parks.map((park) => {
+            // Process hero image URL
+            if (park.fields?.heroImage?.fields?.file?.url) {
+              const url = park.fields.heroImage.fields.file.url
+              park.fields.heroImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+
+            // Process gallery images URLs
+            if (park.fields?.galleryImages?.length) {
+              park.fields.galleryImages = park.fields.galleryImages.map((image) => {
+                if (image.fields?.file?.url) {
+                  const url = image.fields.file.url
+                  image.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+                }
+                return image
+              })
+            }
+
+            // Process photography spot images
+            if (park.fields?.photographySpots?.length) {
+              park.fields.photographySpots = park.fields.photographySpots.map((spot) => {
+                if (spot.image?.fields?.file?.url) {
+                  const url = spot.image.fields.file.url
+                  spot.image.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+                }
+                return spot
+              })
+            }
+
+            return park
+          })
+        } catch (contentTypeError) {
+          console.error("Error checking for park content type:", contentTypeError)
+          return []
+        }
+      },
+      10 * 60 * 1000, // 10 minutes cache
+    )
+  } catch (error) {
+    console.error("Error fetching parks:", error)
+    return []
+  }
+}
+
+// Fetch a single park by slug
+export async function getParkBySlug(slug: string): Promise<ContentfulPark | null> {
+  if (!slug) {
+    console.error("getParkBySlug called without a slug")
+    return null
+  }
+
+  try {
+    return await getCachedData(
+      `park-${slug}`,
+      async () => {
+        const client = getContentfulClient()
+
+        // First check if the content type exists
+        try {
+          const contentTypesResponse = await client.getContentTypes({
+            "sys.id": "park",
+          })
+
+          // If the content type doesn't exist, return null
+          if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
+            console.warn("Content type 'park' not found in Contentful space.")
+            return null
+          }
+
+          const response = await client.getEntries({
+            content_type: "park",
+            "fields.slug": slug,
+            include: 3, // Include 3 levels of nested references
+          })
+
+          if (response.items.length > 0) {
+            const park = response.items[0] as unknown as ContentfulPark
+
+            // Process hero image URL
+            if (park.fields?.heroImage?.fields?.file?.url) {
+              const url = park.fields.heroImage.fields.file.url
+              park.fields.heroImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+
+            // Process gallery images URLs
+            if (park.fields?.galleryImages?.length) {
+              park.fields.galleryImages = park.fields.galleryImages.map((image) => {
+                if (image.fields?.file?.url) {
+                  const url = image.fields.file.url
+                  image.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+                }
+                return image
+              })
+            }
+
+            return park
+          }
+
+          return null
+        } catch (contentTypeError) {
+          console.error("Error checking for park content type:", contentTypeError)
+          return null
+        }
+      },
+      10 * 60 * 1000, // 10 minutes cache
+    )
+  } catch (error) {
+    console.error(`Error fetching park with slug ${slug}:`, error)
+    return null
+  }
+}
+
+// Fetch featured parks
+export async function getFeaturedParks(limit = 3): Promise<ContentfulPark[]> {
+  try {
+    return await getCachedData(
+      "featured-parks",
+      async () => {
+        const client = getContentfulClient()
+
+        // First check if the content type exists
+        try {
+          const contentTypesResponse = await client.getContentTypes({
+            "sys.id": "park",
+          })
+
+          // If the content type doesn't exist, return empty array
+          if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
+            console.warn("Content type 'park' not found in Contentful space.")
+            return []
+          }
+
+          // First try to get parks marked as featured
+          const response = await client.getEntries({
+            content_type: "park",
+            "fields.featured": true,
+            order: "fields.parkName",
+            include: 2,
+            limit,
+          })
+
+          // If no featured parks found, get the most recent ones instead
+          if (!response.items || response.items.length === 0) {
+            console.log("No parks marked as featured, fetching most recent parks instead")
+            const allParksResponse = await client.getEntries({
+              content_type: "park",
+              order: "-sys.createdAt",
+              include: 2,
+              limit,
+            })
+
+            if (!allParksResponse.items) {
+              return []
+            }
+
+            const parks = allParksResponse.items as unknown as ContentfulPark[]
+            return parks.map((park) => {
+              // Process hero image URL
+              if (park.fields?.heroImage?.fields?.file?.url) {
+                const url = park.fields.heroImage.fields.file.url
+                park.fields.heroImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+              }
+              return park
+            })
+          }
+
+          // Process parks to ensure image URLs are properly formatted
+          const parks = response.items as unknown as ContentfulPark[]
+          return parks.map((park) => {
+            // Process hero image URL
+            if (park.fields?.heroImage?.fields?.file?.url) {
+              const url = park.fields.heroImage.fields.file.url
+              park.fields.heroImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+            return park
+          })
+        } catch (contentTypeError) {
+          console.error("Error checking for park content type:", contentTypeError)
+          return []
+        }
+      },
+      5 * 60 * 1000, // 5 minutes cache
+    )
+  } catch (error) {
+    console.error("Error fetching featured parks:", error)
+    return []
+  }
+}
+
+// Fetch all services
+export async function getAllServices(): Promise<ContentfulService[]> {
+  try {
+    return await getCachedData(
+      "all-services",
+      async () => {
+        const client = getContentfulClient()
+
+        // First check if the content type exists
+        try {
+          const contentTypesResponse = await client.getContentTypes({
+            "sys.id": "service",
+          })
+
+          // If the content type doesn't exist, return empty array
+          if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
+            console.warn("Content type 'service' not found in Contentful space.")
+            return []
+          }
+
+          const response = await client.getEntries({
+            content_type: "service",
+            order: "fields.serviceName",
+            include: 2,
+          })
+
+          if (!response.items) {
+            return []
+          }
+
+          // Process services to ensure image URLs are properly formatted
+          const services = response.items as unknown as ContentfulService[]
+          return services.map((service) => {
+            // Process featured image URL
+            if (service.fields?.featuredImage?.fields?.file?.url) {
+              const url = service.fields.featuredImage.fields.file.url
+              service.fields.featuredImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+
+            // Process gallery images URLs
+            if (service.fields?.galleryImages?.length) {
+              service.fields.galleryImages = service.fields.galleryImages.map((image) => {
+                if (image.fields?.file?.url) {
+                  const url = image.fields.file.url
+                  image.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+                }
+                return image
+              })
+            }
+
+            // Process testimonial images
+            if (service.fields?.testimonials?.length) {
+              service.fields.testimonials = service.fields.testimonials.map((testimonial) => {
+                if (testimonial.image?.fields?.file?.url) {
+                  const url = testimonial.image.fields.file.url
+                  testimonial.image.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+                }
+                return testimonial
+              })
+            }
+
+            return service
+          })
+        } catch (contentTypeError) {
+          console.error("Error checking for service content type:", contentTypeError)
+          return []
+        }
+      },
+      10 * 60 * 1000, // 10 minutes cache
+    )
+  } catch (error) {
+    console.error("Error fetching services:", error)
+    return []
+  }
+}
+
+// Fetch a single service by slug
+export async function getServiceBySlug(slug: string): Promise<ContentfulService | null> {
+  if (!slug) {
+    console.error("getServiceBySlug called without a slug")
+    return null
+  }
+
+  try {
+    return await getCachedData(
+      `service-${slug}`,
+      async () => {
+        const client = getContentfulClient()
+
+        // First check if the content type exists
+        try {
+          const contentTypesResponse = await client.getContentTypes({
+            "sys.id": "service",
+          })
+
+          // If the content type doesn't exist, return null
+          if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
+            console.warn("Content type 'service' not found in Contentful space.")
+            return null
+          }
+
+          const response = await client.getEntries({
+            content_type: "service",
+            "fields.slug": slug,
+            include: 3, // Include 3 levels of nested references
+          })
+
+          if (response.items.length > 0) {
+            const service = response.items[0] as unknown as ContentfulService
+
+            // Process featured image URL
+            if (service.fields?.featuredImage?.fields?.file?.url) {
+              const url = service.fields.featuredImage.fields.file.url
+              service.fields.featuredImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+
+            // Process gallery images URLs
+            if (service.fields?.galleryImages?.length) {
+              service.fields.galleryImages = service.fields.galleryImages.map((image) => {
+                if (image.fields?.file?.url) {
+                  const url = image.fields.file.url
+                  image.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+                }
+                return image
+              })
+            }
+
+            return service
+          }
+
+          return null
+        } catch (contentTypeError) {
+          console.error("Error checking for service content type:", contentTypeError)
+          return null
+        }
+      },
+      10 * 60 * 1000, // 10 minutes cache
+    )
+  } catch (error) {
+    console.error(`Error fetching service with slug ${slug}:`, error)
+    return null
+  }
+}
+
+// Fetch featured services - Updated to focus on Publications and Prints
+export async function getFeaturedServices(limit = 3): Promise<ContentfulService[]> {
+  try {
+    return await getCachedData(
+      "featured-services",
+      async () => {
+        const client = getContentfulClient()
+
+        // First check if the content type exists
+        try {
+          const contentTypesResponse = await client.getContentTypes({
+            "sys.id": "service",
+          })
+
+          // If the content type doesn't exist, return empty array
+          if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
+            console.warn("Content type 'service' not found in Contentful space.")
+            return []
+          }
+
+          // First try to get services that are marked as featured
+          const featuredResponse = await client.getEntries({
+            content_type: "service",
+            "fields.featured": true,
+            order: "fields.serviceName",
+            include: 2,
+            limit,
+          })
+
+          // If we have featured services, use those
+          if (featuredResponse.items && featuredResponse.items.length > 0) {
+            console.log(`Found ${featuredResponse.items.length} featured services`)
+            const services = featuredResponse.items as unknown as ContentfulService[]
+            return services.map((service) => {
+              // Process featured image URL
+              if (service.fields?.featuredImage?.fields?.file?.url) {
+                const url = service.fields.featuredImage.fields.file.url
+                service.fields.featuredImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+              }
+              return service
+            })
+          }
+
+          // If no featured services, try to get services that are Print Sales or Publication category
+          console.log("No services marked as featured, fetching by category instead")
+          const response = await client.getEntries({
+            content_type: "service",
+            "fields.serviceCategory[in]": "Print Sales,Publication",
+            order: "fields.serviceName",
+            include: 2,
+            limit,
+          })
+
+          if (!response.items || response.items.length === 0) {
+            // If no services in those categories, get the most recent ones
+            console.log("No services in Print Sales or Publication categories, fetching most recent")
+            const allServicesResponse = await client.getEntries({
+              content_type: "service",
+              order: "-sys.createdAt",
+              include: 2,
+              limit,
+            })
+
+            if (!allServicesResponse.items) {
+              return []
+            }
+
+            const services = allServicesResponse.items as unknown as ContentfulService[]
+            return services.map((service) => {
+              // Process featured image URL
+              if (service.fields?.featuredImage?.fields?.file?.url) {
+                const url = service.fields.featuredImage.fields.file.url
+                service.fields.featuredImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+              }
+              return service
+            })
+          }
+
+          // Process services to ensure image URLs are properly formatted
+          const services = response.items as unknown as ContentfulService[]
+          return services.map((service) => {
+            // Process featured image URL
+            if (service.fields?.featuredImage?.fields?.file?.url) {
+              const url = service.fields.featuredImage.fields.file.url
+              service.fields.featuredImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+            return service
+          })
+        } catch (contentTypeError) {
+          console.error("Error checking for service content type:", contentTypeError)
+          return []
+        }
+      },
+      5 * 60 * 1000, // 5 minutes cache
+    )
+  } catch (error) {
+    console.error("Error fetching featured services:", error)
+    return []
+  }
 }

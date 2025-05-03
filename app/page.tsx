@@ -9,9 +9,12 @@ import ContactForm from "@/components/contact-form"
 import ContentfulImage from "@/components/contentful-image"
 import ContentfulFallback from "@/components/contentful-fallback"
 import ContentfulDebug from "@/components/contentful-debug"
-import { getHomepage, getAllBlogPosts, getFeaturedGalleryItems, getPhotographerInfo } from "@/lib/api"
+import ContentfulConnectionDebugger from "@/components/contentful-connection-debugger"
+import { getHomepage, getAllBlogPosts, getPhotographerInfo, getFeaturedParks, getFeaturedServices } from "@/lib/api"
 import { isContentfulConfigured } from "@/lib/contentful"
-import HomePageGallery from "@/components/homepage-gallery"
+import { JsonLd } from "@/components/json-ld"
+import ParkCard from "@/components/park-card"
+import ServiceCard from "@/components/service-card"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -19,8 +22,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const homepage = await getHomepage()
 
   return {
-    title: homepage?.fields?.heroTitle || "Wildlife Photography",
-    description: homepage?.fields?.heroSubtitle || "Wildlife photography by David Martin",
+    title: "Houston Wildlife Photography | David Martin - Humble, Texas",
+    description:
+      "Award-winning Houston wildlife photography by David Martin. Specializing in birds and wildlife photography throughout Texas. Based in Humble, TX.",
+    openGraph: {
+      title: "Houston Wildlife Photography | David Martin - Humble, Texas",
+      description:
+        "Award-winning Houston wildlife photography by David Martin. Specializing in birds and wildlife photography throughout Texas. Based in Humble, TX.",
+    },
   }
 }
 
@@ -61,44 +70,10 @@ const sampleBlogPosts = [
   },
 ]
 
-const sampleGalleryItems = [
-  {
-    sys: { id: "gallery1" },
-    fields: {
-      title: "Owl in Moonlight",
-      description: "Great Horned Owl perched on a branch during a full moon night.",
-      image: { fields: { file: { url: "/placeholder.svg?key=n29da" } } },
-      location: "Brazos Bend State Park, TX",
-      category: { fields: { name: "Birds of Prey" } },
-    },
-  },
-  {
-    sys: { id: "gallery2" },
-    fields: {
-      title: "Hummingbird at Dawn",
-      description: "Ruby-throated Hummingbird feeding at first light.",
-      image: { fields: { file: { url: "/placeholder.svg?key=e0hbu" } } },
-      location: "Backyard Studio, Houston, TX",
-      category: { fields: { name: "Small Birds" } },
-    },
-  },
-  {
-    sys: { id: "gallery3" },
-    fields: {
-      title: "Hawk Hunting",
-      description: "Red-tailed Hawk scanning for prey in a Texas field.",
-      image: { fields: { file: { url: "/placeholder.svg?key=c2gpa" } } },
-      location: "Katy Prairie Conservancy, TX",
-      category: { fields: { name: "Birds of Prey" } },
-    },
-  },
-]
-
 export default async function Home() {
   // Initialize variables for content
   let homepage = null
   let featuredPosts = sampleBlogPosts
-  let featuredPhotos = sampleGalleryItems
   let photographer = null
   let contentfulError = null
   const isConfigured = isContentfulConfigured()
@@ -107,11 +82,18 @@ export default async function Home() {
   console.log("Home page - Contentful configuration status:", {
     isConfigured,
     nodeEnv: process.env.NODE_ENV,
-    vercelEnv: process.env.VERCEL_ENV,
+    vercelEnv: process.env.VERCEL_ENV || "local",
+    spaceIdDefined: Boolean(process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID),
+    accessTokenDefined: Boolean(process.env.CONTENTFUL_ACCESS_TOKEN),
   })
 
   try {
     homepage = await getHomepage()
+    console.log("Homepage data fetched successfully:", {
+      hasHomepage: Boolean(homepage),
+      hasFields: Boolean(homepage?.fields),
+      fieldKeys: homepage?.fields ? Object.keys(homepage.fields) : [],
+    })
   } catch (error) {
     console.error("Error fetching homepage:", error)
     contentfulError = error instanceof Error ? error.message : "Error fetching homepage data"
@@ -128,18 +110,27 @@ export default async function Home() {
   }
 
   try {
-    const galleryItems = await getFeaturedGalleryItems(6)
-    if (galleryItems && galleryItems.length > 0) {
-      featuredPhotos = galleryItems
-    }
-  } catch (error) {
-    console.error("Error fetching gallery items:", error)
-  }
-
-  try {
     photographer = await getPhotographerInfo()
   } catch (error) {
     console.error("Error fetching photographer info:", error)
+  }
+
+  // Add this after other data fetching
+  let featuredParks = []
+  let featuredServices = []
+
+  try {
+    featuredParks = await getFeaturedParks(3)
+    console.log(`Successfully fetched ${featuredParks.length} featured parks`)
+  } catch (error) {
+    console.error("Error fetching featured parks:", error)
+  }
+
+  try {
+    featuredServices = await getFeaturedServices(3)
+    console.log(`Successfully fetched ${featuredServices.length} featured services`)
+  } catch (error) {
+    console.error("Error fetching featured services:", error)
   }
 
   // Default contact information if photographer data is not available
@@ -190,11 +181,55 @@ export default async function Home() {
     heroImageTitle = homepage.fields.heroImage.fields.title || "Hero image"
   }
 
+  // Get the process image URL from the processImage field
+  let processImageUrl = "/placeholder.svg?key=houston-wildlife" // Default fallback
+
+  // Super detailed logging for processImage to diagnose the issue
+  console.log("Homepage data - process image (DETAILED DEBUG):", {
+    hasHomepage: Boolean(homepage),
+    homepageType: homepage ? typeof homepage : "null",
+    hasFields: Boolean(homepage?.fields),
+    fieldsType: homepage?.fields ? typeof homepage.fields : "null",
+    allFieldKeys: homepage?.fields ? Object.keys(homepage.fields) : [],
+    hasProcessImage: Boolean(homepage?.fields?.processImage),
+    processImageType: homepage?.fields?.processImage ? typeof homepage.fields.processImage : "null",
+    hasProcessImageFields: Boolean(homepage?.fields?.processImage?.fields),
+    hasProcessImageFile: Boolean(homepage?.fields?.processImage?.fields?.file),
+    hasProcessImageUrl: Boolean(homepage?.fields?.processImage?.fields?.file?.url),
+    rawProcessImageUrl: homepage?.fields?.processImage?.fields?.file?.url || "null",
+  })
+
+  // Use the processImage field if it exists with proper null checking
+  if (homepage?.fields?.processImage?.fields?.file?.url) {
+    processImageUrl = homepage.fields.processImage.fields.file.url
+    // Ensure the URL has the proper protocol
+    if (processImageUrl.startsWith("//")) {
+      processImageUrl = `https:${processImageUrl}`
+    }
+    console.log("Using processImage URL:", processImageUrl)
+  } else {
+    console.warn("processImage not found or invalid, using fallback image")
+  }
+
+  // Add this after the existing console.log statements for processImage
+  console.log("Featured parks data:", {
+    count: featuredParks.length,
+    ids: featuredParks.map((park) => park.sys?.id || "unknown"),
+    names: featuredParks.map((park) => park.fields?.parkName || "unnamed"),
+  })
+
+  console.log("Featured services data:", {
+    count: featuredServices.length,
+    ids: featuredServices.map((service) => service.sys?.id || "unknown"),
+    names: featuredServices.map((service) => service.fields?.serviceName || "unnamed"),
+  })
+
   return (
     <main className="flex min-h-screen flex-col">
-      {/* Show debug component in development */}
+      {/* Show debug components in development */}
       {process.env.NODE_ENV === "development" && (
         <div className="container mx-auto px-4 mt-8">
+          <ContentfulConnectionDebugger />
           <ContentfulDebug />
         </div>
       )}
@@ -213,7 +248,7 @@ export default async function Home() {
         <div className="absolute inset-0 z-0">
           <ContentfulImage
             src={heroImageUrl}
-            alt={heroImageTitle}
+            alt="Houston wildlife photography by David Martin - Humble, Texas photographer specializing in birds and nature"
             fill
             priority
             className="object-cover brightness-[0.6]"
@@ -221,12 +256,10 @@ export default async function Home() {
         </div>
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
           <div className="max-w-2xl space-y-6">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white">
-              {homepage?.fields?.heroTitle || "Capturing Nature Through a Tech Lens"}
-            </h1>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white">Houston Wildlife Photography</h1>
             <p className="text-lg md:text-xl text-gray-200">
-              {homepage?.fields?.heroSubtitle ||
-                "Wildlife photography by David Martin, specializing in avian subjects from the diverse ecosystems of Texas, powered by a passion for both nature and web technology."}
+              Wildlife photography by David Martin, based in Humble, Texas. Specializing in birds and wildlife
+              throughout the Houston area and beyond.
             </p>
             <div className="flex flex-wrap gap-4">
               <Button asChild size="lg">
@@ -244,25 +277,30 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Featured Gallery */}
-      <section className="py-20 bg-background">
+      {/* Houston Area Photography Section - Centered Text */}
+      <section className="py-16 bg-gradient-to-b from-accent/5 to-background">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">Featured Photography</h2>
-              <p className="text-muted-foreground max-w-2xl">
-                A selection of my favorite wildlife captures, focusing on birds in their natural habitats.
-              </p>
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-6">Houston Area Wildlife Photography</h2>
+            <p className="text-lg mb-5 leading-relaxed">
+              Based in Humble, Texas, I specialize in capturing the diverse bird and animal species found throughout the
+              Houston area's rich and varied ecosystems. My passion lies in revealing the hidden beauty of our local
+              wildlife through the lens.
+            </p>
+            <p className="text-lg mb-5 leading-relaxed">
+              From the wetlands of Brazos Bend State Park to the coastal habitats of Galveston, my work showcases the
+              incredible biodiversity of Southeast Texas. Each photograph represents hours of patience, technical
+              precision, and a deep respect for nature's delicate balance.
+            </p>
+            <div className="flex justify-center mt-8">
+              <Button asChild className="mx-2">
+                <Link href="/about">About the Photographer</Link>
+              </Button>
+              <Button asChild variant="outline" className="mx-2">
+                <Link href="/gallery">View Gallery</Link>
+              </Button>
             </div>
-            <Button variant="ghost" asChild className="mt-4 md:mt-0">
-              <Link href="/gallery" className="flex items-center gap-2">
-                View All Work
-                <ArrowRight size={16} />
-              </Link>
-            </Button>
           </div>
-
-          <HomePageGallery items={featuredPhotos} />
         </div>
       </section>
 
@@ -271,9 +309,10 @@ export default async function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Recent Articles</h2>
+              <h2 className="text-3xl font-bold mb-2">Houston Wildlife Photography Blog</h2>
               <p className="text-muted-foreground max-w-2xl">
-                Thoughts and insights on wildlife photography, technology, and conservation.
+                Insights on wildlife photography in Houston and throughout Texas, including tips, location guides, and
+                conservation efforts.
               </p>
             </div>
             <Button variant="ghost" asChild className="mt-4 md:mt-0">
@@ -306,15 +345,91 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Contact Section */}
+      {/* Featured Parks Section */}
       <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Featured Photography Locations</h2>
+              <p className="text-muted-foreground max-w-2xl">
+                Discover the best wildlife photography spots in and around Houston
+              </p>
+            </div>
+            <Button variant="ghost" asChild className="mt-4 md:mt-0">
+              <Link href="/parks" className="flex items-center gap-2">
+                View All Locations
+                <ArrowRight size={16} />
+              </Link>
+            </Button>
+          </div>
+
+          {featuredParks.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredParks.map((park) => (
+                <ParkCard key={park.sys.id} park={park} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-muted/20 rounded-lg">
+              <h3 className="text-xl font-medium mb-2">No featured parks available yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Add parks in Contentful to showcase your favorite photography locations.
+              </p>
+              <Button asChild>
+                <Link href="/parks">Browse Parks</Link>
+              </Button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Featured Services Section */}
+      <section className="py-20 bg-accent/5">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Publications & Prints</h2>
+              <p className="text-muted-foreground max-w-2xl">
+                Explore my wildlife photography publications and fine art print offerings
+              </p>
+            </div>
+            <Button variant="ghost" asChild className="mt-4 md:mt-0">
+              <Link href="/services" className="flex items-center gap-2">
+                View All
+                <ArrowRight size={16} />
+              </Link>
+            </Button>
+          </div>
+
+          {featuredServices.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredServices.map((service) => (
+                <ServiceCard key={service.sys.id} service={service} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-muted/20 rounded-lg">
+              <h3 className="text-xl font-medium mb-2">No featured services available yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Add services in Contentful to showcase your publications and print offerings.
+              </p>
+              <Button asChild>
+                <Link href="/services">Browse Services</Link>
+              </Button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="py-20 bg-accent/5">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
-              <h2 className="text-3xl font-bold mb-6">Get In Touch</h2>
+              <h2 className="text-3xl font-bold mb-6">Contact Houston Wildlife Photographer</h2>
               <p className="text-muted-foreground mb-8 max-w-md">
-                Interested in prints, collaborations, or just want to chat about wildlife photography? Feel free to
-                reach out.
+                Based in Humble, Texas, I'm available for wildlife photography commissions, print purchases, and
+                photography workshops throughout the Houston area.
               </p>
 
               <div className="space-y-4 mb-8">
@@ -324,17 +439,13 @@ export default async function Home() {
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin className="text-primary h-5 w-5" />
-                  <span>
-                    {typeof contactLocation === "object"
-                      ? (contactLocation.city || "Houston") + ", " + (contactLocation.state || "Texas")
-                      : contactLocation || "Houston, Texas"}
-                  </span>
+                  <span>Humble, Texas (Greater Houston Area)</span>
                 </div>
               </div>
 
               <div className="aspect-video relative rounded-lg overflow-hidden">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d443088.20075264716!2d-95.73095328906248!3d29.817350000000016!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8640b8b4488d8501%3A0xca0d02def365053b!2sHouston%2C%20TX!5e0!3m2!1sen!2sus!4v1651597022215!5m2!1sen!2sus"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d110398.95796898!2d-95.33553148359373!3d29.99880000000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8640b9c2bd6c3cf3%3A0x96186793d3c8c10f!2sHumble%2C%20TX!5e0!3m2!1sen!2sus!4v1651597022215!5m2!1sen!2sus"
                   width="600"
                   height="450"
                   style={{ border: 0 }}
@@ -342,6 +453,7 @@ export default async function Home() {
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   className="w-full h-full"
+                  title="Map showing Humble, Texas - base of operations for David Martin Wildlife Photography"
                 ></iframe>
               </div>
             </div>
@@ -354,6 +466,44 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Add structured data for local business */}
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "@id": "https://daveypicsstudio.com",
+          name: "David Martin Wildlife Photography",
+          description:
+            "Professional wildlife photography services in Houston and Humble, Texas, specializing in bird and nature photography.",
+          url: "https://daveypicsstudio.com",
+          telephone: "+12815551234",
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "123 Wildlife Way",
+            addressLocality: "Humble",
+            addressRegion: "TX",
+            postalCode: "77338",
+            addressCountry: "US",
+          },
+          geo: {
+            "@type": "GeoCoordinates",
+            latitude: 29.9988,
+            longitude: -95.2622,
+          },
+          image: ["https://daveypicsstudio.com/images/logo.jpg", "https://daveypicsstudio.com/images/storefront.jpg"],
+          priceRange: "$$",
+          openingHoursSpecification: [
+            {
+              "@type": "OpeningHoursSpecification",
+              dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+              opens: "09:00",
+              closes: "17:00",
+            },
+          ],
+          sameAs: ["https://www.instagram.com/davey.pics/", "https://www.facebook.com/daveypicsstudio"],
+        }}
+      />
     </main>
   )
 }

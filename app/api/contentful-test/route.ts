@@ -1,91 +1,91 @@
 import { NextResponse } from "next/server"
-import { getContentfulClient, isContentfulConfigured } from "@/lib/contentful"
+import { getContentfulClient } from "@/lib/contentful"
 
-export async function GET() {
-  const spaceId = process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID
-  const accessToken = process.env.CONTENTFUL_ACCESS_TOKEN
-
-  // Check environment variables
-  const envVars = {
-    spaceId: Boolean(spaceId),
-    accessToken: Boolean(accessToken),
-  }
-
-  // Initialize results
-  const results: any = {
-    envVars,
-    connection: { success: false },
-    contentTypes: { success: false },
-    entries: { success: false },
-    rawResponse: null,
-  }
-
-  // If environment variables are missing, return early
-  if (!isContentfulConfigured()) {
-    return NextResponse.json({
-      ...results,
-      connection: {
-        success: false,
-        error: "Missing environment variables",
-      },
-    })
-  }
+export async function GET(request: Request) {
+  const url = new URL(request.url)
+  const detailed = url.searchParams.get("detailed") === "true"
 
   try {
+    // Check environment variables
+    const spaceId = process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID
+    const accessToken = process.env.CONTENTFUL_ACCESS_TOKEN
+
+    if (!spaceId || !accessToken) {
+      return NextResponse.json({
+        success: false,
+        message: "Missing Contentful credentials",
+        env: {
+          NEXT_PUBLIC_CONTENTFUL_SPACE_ID: Boolean(spaceId),
+          CONTENTFUL_ACCESS_TOKEN: Boolean(accessToken),
+        },
+      })
+    }
+
     // Get Contentful client
     const client = getContentfulClient()
 
-    // Test connection by getting content types
-    const contentTypesResponse = await client.getContentTypes()
-    results.connection.success = true
-    results.rawResponse = contentTypesResponse
+    // Test connection with a simple query
+    const contentTypesResponse = await client.getContentTypes({ limit: 10 })
 
-    // Get content types
-    if (contentTypesResponse.items.length > 0) {
-      results.contentTypes = {
-        success: true,
-        types: contentTypesResponse.items.map((type) => ({
-          name: type.name,
-          sys: type.sys,
-        })),
-      }
-    } else {
-      results.contentTypes = {
-        success: false,
-        error: "No content types found",
+    // If detailed mode, get more information
+    let homepageFields = null
+    let contentTypes = null
+
+    if (detailed) {
+      // Get content types
+      contentTypes = contentTypesResponse.items.map((type) => ({
+        id: type.sys.id,
+        name: type.name,
+        displayField: type.displayField,
+      }))
+
+      // Try to get homepage content
+      try {
+        const homepageResponse = await client.getEntries({
+          content_type: "homepage",
+          include: 2,
+          limit: 1,
+        })
+
+        if (homepageResponse.items && homepageResponse.items.length > 0) {
+          const homepage = homepageResponse.items[0]
+          homepageFields = {
+            availableFields: Object.keys(homepage.fields || {}),
+            hasProcessImage: Boolean(homepage.fields?.processImage),
+            processImageDetails: homepage.fields?.processImage
+              ? {
+                  hasFields: Boolean(homepage.fields.processImage.fields),
+                  hasFile: Boolean(homepage.fields.processImage.fields?.file),
+                  fileUrl: homepage.fields.processImage.fields?.file?.url || null,
+                }
+              : null,
+          }
+        } else {
+          homepageFields = { error: "No homepage entries found" }
+        }
+      } catch (error) {
+        homepageFields = { error: error instanceof Error ? error.message : "Unknown error" }
       }
     }
 
-    // Try to get some entries
-    try {
-      const entriesResponse = await client.getEntries({
-        limit: 5,
-      })
-
-      results.entries = {
-        success: true,
-        count: entriesResponse.total,
-        sample: entriesResponse.items.map((item) => ({
-          id: item.sys.id,
-          contentType: item.sys.contentType?.sys.id,
-          updatedAt: item.sys.updatedAt,
-          fields: Object.keys(item.fields),
-        })),
-      }
-    } catch (entriesError) {
-      results.entries = {
-        success: false,
-        error: entriesError instanceof Error ? entriesError.message : "Unknown error fetching entries",
-      }
-    }
-
-    return NextResponse.json(results)
-  } catch (error) {
     return NextResponse.json({
-      ...results,
-      connection: {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error connecting to Contentful",
+      success: true,
+      message: "Successfully connected to Contentful",
+      env: {
+        NEXT_PUBLIC_CONTENTFUL_SPACE_ID: Boolean(spaceId),
+        CONTENTFUL_ACCESS_TOKEN: Boolean(accessToken),
+      },
+      contentTypes: contentTypes,
+      homepageFields: homepageFields,
+    })
+  } catch (error) {
+    console.error("Contentful test error:", error)
+    return NextResponse.json({
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error occurred",
+      env: {
+        NEXT_PUBLIC_CONTENTFUL_SPACE_ID: Boolean(process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID),
+        CONTENTFUL_ACCESS_TOKEN: Boolean(process.env.CONTENTFUL_ACCESS_TOKEN),
       },
     })
   }

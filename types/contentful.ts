@@ -115,6 +115,7 @@ export interface ContentfulHomepage {
     heroSubtitle: string
     heroImage?: ContentfulImage // Keep for backward compatibility
     heroImages?: ContentfulImage[] // New field for multiple images
+    processImage?: ContentfulImage // New field for the process section image
     featuredGallery?: ContentfulGalleryCollection
     featuredPosts?: ContentfulBlogPost[]
   }
@@ -148,5 +149,88 @@ export interface ContentfulContactPage {
       question: string
       answer: string
     }>
+  }
+}
+
+// Park content type
+export interface ContentfulPark {
+  sys: ContentfulSys
+  fields: {
+    parkName: string
+    slug: string
+    description: any // Rich text
+    shortDescription: string
+    heroImage: ContentfulImage
+    galleryImages?: ContentfulImage[]
+    location: {
+      lat: number
+      lon: number
+    }
+    address: string
+    website?: string
+    hours?: any // Rich text
+    entranceFees?: any // Rich text
+    bestTimes?: {
+      season?: string
+      timeOfDay?: string
+      notes?: string
+    }
+    wildlifeSpecies?: string[]
+    photographySpots?: Array<{
+      spotName: string
+      description: string
+      coordinates?: {
+        lat: number
+        lon: number
+      }
+      image?: ContentfulImage
+    }>
+    photographyTips?: any // Rich text
+    amenities?: string[]
+    difficultyLevel?: "Easy" | "Moderate" | "Challenging"
+    featured?: boolean
+    relatedParks?: ContentfulPark[]
+    relatedBlogPosts?: ContentfulBlogPost[]
+  }
+}
+
+// Service content type
+export interface ContentfulService {
+  sys: ContentfulSys
+  fields: {
+    serviceName: string
+    slug: string
+    shortDescription: string
+    detailedDescription: any // Rich text
+    featuredImage: ContentfulImage
+    galleryImages?: ContentfulImage[]
+    serviceCategory: "Workshop" | "Guided Tour" | "Print Sales" | "Publication" | "Other"
+    duration?: string
+    price?: {
+      amount: number
+      currency: string
+      unit: string
+    }
+    locationType?: "On Location" | "Studio" | "Virtual" | "Multiple Locations"
+    locations?: ContentfulPark[]
+    whatsIncluded?: any // Rich text
+    requirements?: any // Rich text
+    groupSize?: {
+      minimum?: number
+      maximum?: number
+    }
+    skillLevel?: "Beginner" | "Intermediate" | "Advanced" | "All Levels"
+    equipment?: any // Rich text
+    availability?: any // Rich text
+    bookingInformation?: any // Rich text
+    testimonials?: Array<{
+      quote: string
+      author: string
+      location?: string
+      image?: ContentfulImage
+    }>
+    featured?: boolean
+    relatedServices?: ContentfulService[]
+    relatedBlogPosts?: ContentfulBlogPost[]
   }
 }

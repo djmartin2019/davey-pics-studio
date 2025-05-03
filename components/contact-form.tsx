@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Send, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,22 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useSearchParams } from "next/navigation"
+import { getAllServices } from "@/lib/api"
+
+// Add this function to fetch services at the component level
+async function getServiceOptions() {
+  try {
+    const services = await getAllServices()
+    return services.map((service) => ({
+      value: service.fields.slug,
+      label: service.fields.serviceName,
+    }))
+  } catch (error) {
+    console.error("Error fetching services for contact form:", error)
+    return []
+  }
+}
 
 export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -36,6 +52,29 @@ export default function ContactForm() {
     const { name, value } = "target" in e ? e.target : e
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
+
+  // Inside your ContactForm component, add this before the return statement
+  const searchParams = useSearchParams()
+  const serviceParam = searchParams.get("service")
+
+  // Add a state for services
+  const [services, setServices] = useState([])
+  const [selectedService, setSelectedService] = useState(serviceParam || "")
+
+  // Add this useEffect to fetch services
+  useEffect(() => {
+    async function loadServices() {
+      const serviceOptions = await getServiceOptions()
+      setServices(serviceOptions)
+
+      // If there's a service in the URL params, select it
+      if (serviceParam && serviceOptions.some((s) => s.value === serviceParam)) {
+        setSelectedService(serviceParam)
+      }
+    }
+
+    loadServices()
+  }, [serviceParam])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,7 +109,7 @@ export default function ContactForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, service: selectedService }),
       })
 
       const data = await response.json()
@@ -88,6 +127,7 @@ export default function ContactForm() {
           subject: "",
           message: "",
         })
+        setSelectedService("")
       } else {
         setFormStatus({
           type: "error",
@@ -174,6 +214,25 @@ export default function ContactForm() {
             <SelectItem value="collaboration">Collaboration</SelectItem>
             <SelectItem value="workshop">Workshop Information</SelectItem>
             <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* In your form, add a select field for services */}
+      {/* Add this after the subject field */}
+      <div className="space-y-2">
+        <Label htmlFor="service">Interested in a specific service?</Label>
+        <Select name="service" value={selectedService} onValueChange={(value) => setSelectedService(value)}>
+          <SelectTrigger className="bg-background/50">
+            <SelectValue placeholder="Select a service (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">Select a service (optional)</SelectItem>
+            {services.map((service) => (
+              <SelectItem key={service.value} value={service.value}>
+                {service.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
