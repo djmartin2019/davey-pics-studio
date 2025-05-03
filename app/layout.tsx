@@ -7,6 +7,9 @@ import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { JsonLd } from "@/components/json-ld"
+import { PHProvider } from "@/lib/posthog"
+import { Analytics } from "@/components/analytics"
+import { Suspense } from "react"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -68,45 +71,50 @@ export default function RootLayout({
         <link rel="canonical" href="https://daveypicsstudio.com" />
       </head>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <JsonLd
-            data={{
-              "@context": "https://schema.org",
-              "@type": "ProfessionalService",
-              name: "David Martin Photography",
-              description:
-                "Houston wildlife photography by David Martin, specializing in Texas birds and wildlife photography.",
-              url: "https://daveypicsstudio.com",
-              telephone: "+12815551234",
-              address: {
-                "@type": "PostalAddress",
-                streetAddress: "123 Wildlife Way",
-                addressLocality: "Humble",
-                addressRegion: "TX",
-                postalCode: "77338",
-                addressCountry: "US",
-              },
-              geo: {
-                "@type": "GeoCoordinates",
-                latitude: 29.9988,
-                longitude: -95.2622,
-              },
-              priceRange: "$$",
-              openingHoursSpecification: {
-                "@type": "OpeningHoursSpecification",
-                dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                opens: "09:00",
-                closes: "17:00",
-              },
-              sameAs: ["https://www.instagram.com/davey.pics/", "https://www.facebook.com/daveypicsstudio"],
-            }}
-          />
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <div className="pt-16">{children}</div>
-            <Footer />
-          </div>
-        </ThemeProvider>
+        <PHProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+            <JsonLd
+              data={{
+                "@context": "https://schema.org",
+                "@type": "ProfessionalService",
+                name: "David Martin Photography",
+                description:
+                  "Houston wildlife photography by David Martin, specializing in Texas birds and wildlife photography.",
+                url: "https://daveypicsstudio.com",
+                telephone: "+12815551234",
+                address: {
+                  "@type": "PostalAddress",
+                  streetAddress: "123 Wildlife Way",
+                  addressLocality: "Humble",
+                  addressRegion: "TX",
+                  postalCode: "77338",
+                  addressCountry: "US",
+                },
+                geo: {
+                  "@type": "GeoCoordinates",
+                  latitude: 29.9988,
+                  longitude: -95.2622,
+                },
+                priceRange: "$$",
+                openingHoursSpecification: {
+                  "@type": "OpeningHoursSpecification",
+                  dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                  opens: "09:00",
+                  closes: "17:00",
+                },
+                sameAs: ["https://www.instagram.com/davey.pics/", "https://www.facebook.com/daveypicsstudio"],
+              }}
+            />
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <Suspense>
+                <div className="pt-16">{children}</div>
+              </Suspense>
+              <Footer />
+            </div>
+            <Analytics />
+          </ThemeProvider>
+        </PHProvider>
       </body>
     </html>
   )
