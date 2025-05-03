@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getAboutPageData } from "@/lib/api"
 import ContentfulImage from "@/components/contentful-image"
+import RichTextRenderer from "@/components/rich-text-renderer"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -29,9 +30,8 @@ export default async function AboutPage() {
   const profileImage = aboutPage?.fields?.profileImage?.fields?.file?.url || "/placeholder.svg?key=cr4q0"
   const biography = aboutPage?.fields?.biography || null
 
-  // Convert biography from Contentful rich text to plain text for simple display
-  // In a real implementation, you might want to use the RichTextRenderer component
-  const biographyText = [
+  // Fallback biography paragraphs if no Contentful data is available
+  const fallbackBiographyText = [
     "I've always been fascinated by the natural world, especially birds. Their freedom, diversity, and behaviors captivate me in ways that few other subjects can. My journey into wildlife photography began when I combined this passion with my love for technology and visual storytelling.",
     "With a background in technology, I bring a unique perspective to wildlife photography. I'm constantly exploring the intersection between cutting-edge camera technology and the timeless beauty of nature. This blend of interests allows me to capture moments that might otherwise go unnoticed.",
     "My dream is to one day shoot for National Geographic, bringing the wonders of avian life to a global audience. I believe that through photography, we can foster a deeper appreciation for wildlife and inspire conservation efforts worldwide.",
@@ -66,14 +66,12 @@ export default async function AboutPage() {
             <div className="space-y-6">
               <h2 className="text-3xl font-bold">My Story</h2>
               {biography ? (
-                // If we have rich text from Contentful, we'd use a renderer here
-                <div className="text-lg text-muted-foreground space-y-4">
-                  <p>Content from Contentful would go here</p>
-                </div>
+                // Use RichTextRenderer to display the Contentful rich text content
+                <RichTextRenderer content={biography} className="text-lg text-muted-foreground" />
               ) : (
                 // Fallback text if no Contentful data
                 <div className="space-y-4">
-                  {biographyText.map((paragraph, index) => (
+                  {fallbackBiographyText.map((paragraph, index) => (
                     <p key={index} className="text-lg text-muted-foreground">
                       {paragraph}
                     </p>

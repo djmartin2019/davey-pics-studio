@@ -21,7 +21,12 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" asChild>
-                <Link href="https://instagram.com/davey.pics" aria-label="Instagram">
+                <Link
+                  href="https://instagram.com/davey.pics"
+                  aria-label="Instagram"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Instagram className="h-5 w-5" />
                 </Link>
               </Button>
