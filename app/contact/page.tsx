@@ -6,6 +6,9 @@ import ContentfulImage from "@/components/contentful-image"
 import { getContactPageData } from "@/lib/api"
 import { JsonLd } from "@/components/json-ld"
 
+// Import Suspense
+import { Suspense } from "react"
+
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -127,7 +130,9 @@ export default async function ContactPage() {
               <h2 className="text-3xl font-bold mb-8">Send a Message</h2>
               <Card className="bg-card/50 backdrop-blur-sm border-primary/10">
                 <CardContent className="pt-6">
-                  <ContactForm />
+                  <Suspense fallback={<div className="p-4 text-center">Loading contact form...</div>}>
+                    <ContactForm />
+                  </Suspense>
                 </CardContent>
               </Card>
             </div>
@@ -144,7 +149,8 @@ export default async function ContactPage() {
             <div className="space-y-2">
               <h3 className="text-xl font-semibold">Do you sell prints of your Houston wildlife photographs?</h3>
               <p className="text-muted-foreground">
-                I currently do not have a process for selling prints. However, if you would like to purchase any of my work, I would love to chat with you further!
+                I currently do not have a process for selling prints. However, if you would like to purchase any of my
+                work, I would love to chat with you further!
               </p>
             </div>
 
