@@ -1,24 +1,49 @@
 import type { Metadata } from "next"
-import Image from "next/image"
 import Link from "next/link"
 import { Camera, Cpu, Leaf } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { getAboutPageData } from "@/lib/api"
+import ContentfulImage from "@/components/contentful-image"
 
-export const metadata: Metadata = {
-  title: "About | David Martin Photography",
-  description: "Learn about David Martin, wildlife photographer and technologist",
+export const revalidate = 60 // Revalidate this page every 60 seconds
+
+export async function generateMetadata(): Promise<Metadata> {
+  const aboutPage = await getAboutPageData()
+
+  return {
+    title: aboutPage?.fields?.title
+      ? `${aboutPage.fields.title} | David Martin Photography`
+      : "About | David Martin Photography",
+    description: aboutPage?.fields?.subtitle || "Learn about David Martin, wildlife photographer and technologist",
+  }
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const aboutPage = await getAboutPageData()
+
+  // Extract fields with fallbacks for each
+  const title = aboutPage?.fields?.title || "About David Martin"
+  const subtitle = aboutPage?.fields?.subtitle || "Wildlife photographer, technologist, and bird enthusiast"
+  const heroImage = aboutPage?.fields?.heroImage?.fields?.file?.url || "/placeholder.svg?key=dmqtt"
+  const profileImage = aboutPage?.fields?.profileImage?.fields?.file?.url || "/placeholder.svg?key=cr4q0"
+  const biography = aboutPage?.fields?.biography || null
+
+  // Convert biography from Contentful rich text to plain text for simple display
+  // In a real implementation, you might want to use the RichTextRenderer component
+  const biographyText = [
+    "I've always been fascinated by the natural world, especially birds. Their freedom, diversity, and behaviors captivate me in ways that few other subjects can. My journey into wildlife photography began when I combined this passion with my love for technology and visual storytelling.",
+    "With a background in technology, I bring a unique perspective to wildlife photography. I'm constantly exploring the intersection between cutting-edge camera technology and the timeless beauty of nature. This blend of interests allows me to capture moments that might otherwise go unnoticed.",
+    "My dream is to one day shoot for National Geographic, bringing the wonders of avian life to a global audience. I believe that through photography, we can foster a deeper appreciation for wildlife and inspire conservation efforts worldwide.",
+  ]
+
   return (
     <main className="flex min-h-screen flex-col">
       {/* Hero Section */}
       <section className="relative w-full h-[50vh] overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/placeholder.svg?key=dmqtt"
+          <ContentfulImage
+            src={heroImage}
             alt="Wildlife photographer"
             fill
             priority
@@ -26,10 +51,8 @@ export default function AboutPage() {
           />
         </div>
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-end pb-12">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">About David Martin</h1>
-          <p className="text-lg md:text-xl text-gray-200 max-w-2xl">
-            Wildlife photographer, technologist, and bird enthusiast
-          </p>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">{title}</h1>
+          <p className="text-lg md:text-xl text-gray-200 max-w-2xl">{subtitle}</p>
         </div>
       </section>
 
@@ -38,25 +61,25 @@ export default function AboutPage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="relative aspect-square rounded-lg overflow-hidden">
-              <Image src="/placeholder.svg?key=cr4q0" alt="David Martin" fill className="object-cover" />
+              <ContentfulImage src={profileImage} alt="David Martin" fill className="object-cover" />
             </div>
             <div className="space-y-6">
               <h2 className="text-3xl font-bold">My Story</h2>
-              <p className="text-lg text-muted-foreground">
-                I've always been fascinated by the natural world, especially birds. Their freedom, diversity, and
-                behaviors captivate me in ways that few other subjects can. My journey into wildlife photography began
-                when I combined this passion with my love for technology and visual storytelling.
-              </p>
-              <p className="text-lg text-muted-foreground">
-                With a background in technology, I bring a unique perspective to wildlife photography. I'm constantly
-                exploring the intersection between cutting-edge camera technology and the timeless beauty of nature.
-                This blend of interests allows me to capture moments that might otherwise go unnoticed.
-              </p>
-              <p className="text-lg text-muted-foreground">
-                My dream is to one day shoot for National Geographic, bringing the wonders of avian life to a global
-                audience. I believe that through photography, we can foster a deeper appreciation for wildlife and
-                inspire conservation efforts worldwide.
-              </p>
+              {biography ? (
+                // If we have rich text from Contentful, we'd use a renderer here
+                <div className="text-lg text-muted-foreground space-y-4">
+                  <p>Content from Contentful would go here</p>
+                </div>
+              ) : (
+                // Fallback text if no Contentful data
+                <div className="space-y-4">
+                  {biographyText.map((paragraph, index) => (
+                    <p key={index} className="text-lg text-muted-foreground">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              )}
               <div className="pt-4">
                 <Button asChild>
                   <Link href="/contact">Get in Touch</Link>

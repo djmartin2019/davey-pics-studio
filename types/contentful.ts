@@ -127,9 +127,26 @@ export interface ContentfulAboutPage {
     title: string
     subtitle: string
     heroImage: ContentfulImage
-    biography: any // Rich text
     profileImage: ContentfulImage
-    equipment: any // Rich text
-    philosophy: any // Rich text
+    biography?: any // Rich text field
+    equipment?: any // Rich text field
+    philosophy?: any // Rich text field
+  }
+}
+
+// Contact Page type
+export interface ContentfulContactPage {
+  sys: ContentfulSys
+  fields: {
+    title: string
+    subtitle: string
+    heroImage: ContentfulImage
+    contactEmail?: string
+    contactInstagram?: string
+    contactLocation?: string
+    faqItems?: Array<{
+      question: string
+      answer: string
+    }>
   }
 }

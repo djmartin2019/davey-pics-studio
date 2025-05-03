@@ -1,33 +1,49 @@
 import type { Metadata } from "next"
-import Image from "next/image"
 import { Mail, MapPin, Instagram } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import ContactForm from "@/components/contact-form"
+import ContentfulImage from "@/components/contentful-image"
+import { getContactPageData } from "@/lib/api"
 
-export const metadata: Metadata = {
-  title: "Contact | David Martin Photography",
-  description: "Get in touch with David Martin for photography inquiries, collaborations, or print purchases",
+export const revalidate = 60 // Revalidate this page every 60 seconds
+
+export async function generateMetadata(): Promise<Metadata> {
+  const contactPage = await getContactPageData()
+
+  return {
+    title: contactPage?.fields?.title
+      ? `${contactPage.fields.title} | David Martin Photography`
+      : "Contact | David Martin Photography",
+    description:
+      contactPage?.fields?.subtitle ||
+      "Get in touch with David Martin for photography inquiries, collaborations, or print purchases",
+  }
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const contactPage = await getContactPageData()
+
+  // Extract fields with fallbacks
+  const title = contactPage?.fields?.title || "Get In Touch"
+  const subtitle =
+    contactPage?.fields?.subtitle || "I'd love to hear from you about photography, collaborations, or print inquiries"
+  const heroImage = contactPage?.fields?.heroImage?.fields?.file?.url || "/placeholder.svg?key=tja72"
+
+  // Contact info - could also come from Contentful
+  const email = "daveypicsstudio@gmail.com"
+  const instagramHandle = "davey.pics"
+  const location = "Houston, Texas"
+
   return (
     <main className="flex min-h-screen flex-col">
       {/* Hero Section */}
       <section className="relative w-full h-[40vh] overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/placeholder.svg?key=tja72"
-            alt="Contact"
-            fill
-            priority
-            className="object-cover brightness-[0.7]"
-          />
+          <ContentfulImage src={heroImage} alt="Contact" fill priority className="object-cover brightness-[0.7]" />
         </div>
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">Get In Touch</h1>
-          <p className="text-lg md:text-xl text-gray-200 max-w-2xl">
-            I'd love to hear from you about photography, collaborations, or print inquiries
-          </p>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">{title}</h1>
+          <p className="text-lg md:text-xl text-gray-200 max-w-2xl">{subtitle}</p>
         </div>
       </section>
 
@@ -46,8 +62,8 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-medium text-lg">Email</h3>
                     <p className="text-muted-foreground mb-1">For inquiries and collaborations</p>
-                    <a href="mailto:daveypicsstudio@gmail.com" className="text-primary hover:underline">
-                      daveypicsstudio@gmail.com
+                    <a href={`mailto:${email}`} className="text-primary hover:underline">
+                      {email}
                     </a>
                   </div>
                 </div>
@@ -60,12 +76,12 @@ export default function ContactPage() {
                     <h3 className="font-medium text-lg">Instagram</h3>
                     <p className="text-muted-foreground mb-1">Follow my latest work</p>
                     <a
-                      href="https://instagram.com/davey.pics"
+                      href={`https://instagram.com/${instagramHandle}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"
                     >
-                      @davey.pics
+                      @{instagramHandle}
                     </a>
                   </div>
                 </div>
@@ -77,7 +93,7 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-medium text-lg">Location</h3>
                     <p className="text-muted-foreground mb-1">Based in</p>
-                    <p>Houston, Texas</p>
+                    <p>{location}</p>
                   </div>
                 </div>
               </div>
@@ -117,7 +133,8 @@ export default function ContactPage() {
             <div className="space-y-2">
               <h3 className="text-xl font-semibold">Do you sell prints of your photographs?</h3>
               <p className="text-muted-foreground">
-                I currently do not have a process for selling prints. However, if you would like to purchase any of my work, I would love to chat with you further!
+                I currently do not have a process for selling prints. However, if you would like to purchase any of my
+                work, I would love to chat with you further!
               </p>
             </div>
 

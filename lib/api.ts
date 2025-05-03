@@ -461,6 +461,115 @@ export async function getPhotographerInfo(): Promise<ContentfulAuthor | null> {
   }
 }
 
+// Add these functions to your existing api.ts file
+
+// Fetch About Page data
+export async function getAboutPageData(): Promise<any> {
+  try {
+    return await getCachedData(
+      "about-page",
+      async () => {
+        const client = getContentfulClient()
+
+        // First check if the content type exists
+        try {
+          const contentTypesResponse = await client.getContentTypes({
+            "sys.id": "aboutPage",
+          })
+
+          // If the content type doesn't exist, return null
+          if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
+            console.warn("Content type 'aboutPage' not found in Contentful space.")
+            return null
+          }
+
+          const response = await client.getEntries({
+            content_type: "aboutPage",
+            include: 2,
+            limit: 1,
+          })
+
+          if (response.items && response.items.length > 0) {
+            const aboutPage = response.items[0]
+
+            // Process image URLs to ensure they have https:// prefix
+            if (aboutPage.fields?.heroImage?.fields?.file?.url) {
+              const url = aboutPage.fields.heroImage.fields.file.url
+              aboutPage.fields.heroImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+
+            if (aboutPage.fields?.profileImage?.fields?.file?.url) {
+              const url = aboutPage.fields.profileImage.fields.file.url
+              aboutPage.fields.profileImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+
+            return aboutPage
+          }
+          return null
+        } catch (contentTypeError) {
+          console.error("Error checking for aboutPage content type:", contentTypeError)
+          return null
+        }
+      },
+      5 * 60 * 1000, // 5 minutes cache
+    )
+  } catch (error) {
+    console.error("Error fetching about page data:", error)
+    return null
+  }
+}
+
+// Fetch Contact Page data
+export async function getContactPageData(): Promise<any> {
+  try {
+    return await getCachedData(
+      "contact-page",
+      async () => {
+        const client = getContentfulClient()
+
+        // First check if the content type exists
+        try {
+          const contentTypesResponse = await client.getContentTypes({
+            "sys.id": "contactPage",
+          })
+
+          // If the content type doesn't exist, return null
+          if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
+            console.warn("Content type 'contactPage' not found in Contentful space.")
+            return null
+          }
+
+          const response = await client.getEntries({
+            content_type: "contactPage",
+            include: 2,
+            limit: 1,
+          })
+
+          if (response.items && response.items.length > 0) {
+            const contactPage = response.items[0]
+
+            // Process image URL to ensure it has https:// prefix
+            if (contactPage.fields?.heroImage?.fields?.file?.url) {
+              const url = contactPage.fields.heroImage.fields.file.url
+              contactPage.fields.heroImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+
+            return contactPage
+          }
+          return null
+        } catch (contentTypeError) {
+          console.error("Error checking for contactPage content type:", contentTypeError)
+          return null
+        }
+      },
+      5 * 60 * 1000, // 5 minutes cache
+    )
+  } catch (error) {
+    console.error("Error fetching contact page data:", error)
+    return null
+  }
+}
+
 // Add this helper function at the end of the file
 function getSampleGalleryCollections(): ContentfulGalleryCollection[] {
   return [
