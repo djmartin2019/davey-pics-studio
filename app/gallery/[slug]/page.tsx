@@ -7,17 +7,20 @@ import { Button } from "@/components/ui/button"
 import PhotoGallery from "@/components/photo-gallery"
 import ContentfulImage from "@/components/contentful-image"
 import ContentfulDebugImage from "@/components/contentful-debug-image"
-import { getGalleryCollectionBySlug, getAllGalleryCollections } from "@/lib/api"
+import { getGalleryCollectionBySlug } from "@/lib/api"
 import { getContentfulField } from "@/lib/contentful-utils"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
 export async function generateStaticParams() {
-  const collections = await getAllGalleryCollections()
-
-  return collections.map((collection) => ({
-    slug: collection.fields.slug,
-  }))
+  try {
+    // We only have one virtual collection now
+    return [{ slug: "photos" }]
+  } catch (error) {
+    console.error("Error generating static params for gallery collections:", error)
+    // Return an empty array to prevent build failures
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {

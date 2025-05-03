@@ -1,11 +1,13 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import type React from "react"
 
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer"
 import { BLOCKS, INLINES, MARKS } from "@contentful/rich-text-types"
 import Link from "next/link"
 import ContentfulImage from "./contentful-image"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface RichTextRendererProps {
   content: any
@@ -13,8 +15,30 @@ interface RichTextRendererProps {
 }
 
 export default function RichTextRenderer({ content, className = "" }: RichTextRendererProps) {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   if (!content) {
     return null
+  }
+
+  // If we're server-side or during hydration, render a skeleton
+  if (!isClient) {
+    return (
+      <div className={`prose prose-invert max-w-none ${className}`}>
+        <Skeleton className="h-8 w-3/4 mb-4" />
+        <Skeleton className="h-4 w-full mb-2" />
+        <Skeleton className="h-4 w-full mb-2" />
+        <Skeleton className="h-4 w-5/6 mb-6" />
+        <Skeleton className="h-6 w-2/3 mb-3" />
+        <Skeleton className="h-4 w-full mb-2" />
+        <Skeleton className="h-4 w-full mb-2" />
+        <Skeleton className="h-4 w-4/5 mb-6" />
+      </div>
+    )
   }
 
   // Define how to render each node type

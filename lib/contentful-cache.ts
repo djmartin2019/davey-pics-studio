@@ -30,6 +30,20 @@ export async function getCachedData<T>(
     // Fetch fresh data
     const data = await fetchFn()
 
+    // Check if data is null or undefined and handle appropriately
+    if (data === null || data === undefined) {
+      console.warn(`Fetched data for ${cacheKey} is null or undefined`)
+
+      // If we have expired cache, use it as fallback
+      if (cacheEntry) {
+        console.warn(`Using expired cache for ${cacheKey} as fallback`)
+        return cacheEntry.data as T
+      }
+
+      // Otherwise return the null/undefined data
+      return data
+    }
+
     // Update cache
     cache[cacheKey] = {
       data,
@@ -38,14 +52,16 @@ export async function getCachedData<T>(
 
     return data
   } catch (error) {
+    console.error(`Error fetching data for cache key ${cacheKey}:`, error)
+
     // If fetch fails but we have cached data (even if expired), return it as fallback
     if (cacheEntry) {
-      console.warn(`Failed to fetch fresh data for ${cacheKey}, using expired cache:`, error)
+      console.warn(`Failed to fetch fresh data for ${cacheKey}, using expired cache as fallback`)
       return cacheEntry.data as T
     }
 
-    // Otherwise, rethrow the error
-    throw error
+    // Rethrow the error with more context
+    throw new Error(`Failed to fetch data for ${cacheKey}: ${error instanceof Error ? error.message : String(error)}`)
   }
 }
 

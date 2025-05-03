@@ -19,34 +19,10 @@ export default function PhotoGallery({ items }: PhotoGalleryProps) {
   const [renderedItems, setRenderedItems] = useState<ContentfulGalleryItem[]>([])
 
   // Use useEffect to ensure we're only rendering on the client
-  // This prevents hydration mismatches
   useEffect(() => {
     setIsClient(true)
     // Process the items to ensure each has valid data
-    const processedItems = (items || []).map((item) => ({
-      ...item,
-      fields: {
-        ...item.fields,
-        // Ensure image URL is properly structured
-        image: item.fields.image
-          ? {
-              ...item.fields.image,
-              fields: {
-                ...item.fields.image.fields,
-                file: item.fields.image.fields.file
-                  ? {
-                      ...item.fields.image.fields.file,
-                      // Ensure URL uses https protocol
-                      url: item.fields.image.fields.file.url
-                        ? item.fields.image.fields.file.url.replace(/^\/\//, "https://")
-                        : null,
-                    }
-                  : null,
-              },
-            }
-          : null,
-      },
-    }))
+    const processedItems = (items || []).filter((item) => item && item.fields)
     setRenderedItems(processedItems)
   }, [items])
 
@@ -77,7 +53,7 @@ export default function PhotoGallery({ items }: PhotoGalleryProps) {
     if (e.key === "ArrowRight") navigateImage("next")
   }
 
-  // On server or during hydration, render a placeholder grid
+  // Render a consistent placeholder grid on server and during hydration
   if (!isClient) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -206,25 +182,6 @@ export default function PhotoGallery({ items }: PhotoGalleryProps) {
                   {getContentfulField(renderedItems[selectedImage], "fields.location", "")}
                 </span>
               </div>
-              {renderedItems[selectedImage]?.fields?.metadata && (
-                <div className="mt-2 text-xs text-muted-foreground">
-                  {renderedItems[selectedImage].fields.metadata.camera && (
-                    <span className="mr-3">{renderedItems[selectedImage].fields.metadata.camera}</span>
-                  )}
-                  {renderedItems[selectedImage].fields.metadata.lens && (
-                    <span className="mr-3">{renderedItems[selectedImage].fields.metadata.lens}</span>
-                  )}
-                  {renderedItems[selectedImage].fields.metadata.aperture && (
-                    <span className="mr-3">f/{renderedItems[selectedImage].fields.metadata.aperture}</span>
-                  )}
-                  {renderedItems[selectedImage].fields.metadata.shutterSpeed && (
-                    <span className="mr-3">{renderedItems[selectedImage].fields.metadata.shutterSpeed}s</span>
-                  )}
-                  {renderedItems[selectedImage].fields.metadata.iso && (
-                    <span>ISO {renderedItems[selectedImage].fields.metadata.iso}</span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>

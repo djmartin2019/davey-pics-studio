@@ -59,10 +59,10 @@
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
     "@tailwindcss/typography": "latest",
-    "@contentful/rich-text-react-renderer": "latest",
-    "@contentful/rich-text-types": "latest",
     "nodemailer": "latest",
-    "contentful": "latest"
+    "contentful": "latest",
+    "@contentful/rich-text-react-renderer": "latest",
+    "@contentful/rich-text-types": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

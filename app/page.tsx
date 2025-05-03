@@ -143,6 +143,34 @@ export default async function Home() {
     console.error("Error fetching photographer info:", error)
   }
 
+  // Default contact information if photographer data is not available
+  let contactEmail = "david@daveypics.studio"
+  let contactLocation = "Houston, Texas"
+
+  // Safely extract contact information
+  if (photographer && photographer.fields) {
+    if (photographer.fields.email) {
+      contactEmail = photographer.fields.email
+    }
+
+    if (photographer.fields.location) {
+      // Handle location whether it's a string or an object with coordinates
+      if (typeof photographer.fields.location === "string") {
+        contactLocation = photographer.fields.location
+      } else if (typeof photographer.fields.location === "object") {
+        // If it's a location object with lat/lon, use a default or extract city/state if available
+        if (photographer.fields.location.lat && photographer.fields.location.lon) {
+          contactLocation = "Houston, Texas" // Default if only coordinates are available
+        } else if (photographer.fields.location.city || photographer.fields.location.state) {
+          // Create a formatted string from the location object
+          const city = photographer.fields.location.city || "Houston"
+          const state = photographer.fields.location.state || "Texas"
+          contactLocation = `${city}, ${state}`
+        }
+      }
+    }
+  }
+
   // Determine if we should show the Contentful error message
   const showContentfulError = contentfulError && process.env.NODE_ENV === "development"
 
@@ -284,11 +312,15 @@ export default async function Home() {
               <div className="space-y-4 mb-8">
                 <div className="flex items-center gap-3">
                   <Mail className="text-primary h-5 w-5" />
-                  <span>{photographer?.fields?.email || "david@daveypics.studio"}</span>
+                  <span>{contactEmail}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin className="text-primary h-5 w-5" />
-                  <span>{photographer?.fields?.location || "Houston, Texas"}</span>
+                  <span>
+                    {typeof contactLocation === "object"
+                      ? (contactLocation.city || "Houston") + ", " + (contactLocation.state || "Texas")
+                      : contactLocation || "Houston, Texas"}
+                  </span>
                 </div>
               </div>
 

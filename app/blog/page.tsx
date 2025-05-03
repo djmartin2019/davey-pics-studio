@@ -1,10 +1,11 @@
 import type { Metadata } from "next"
-import Image from "next/image"
-
+import { getAllBlogPosts, getAllCategories } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import BlogPostCard from "@/components/blog-post-card"
-import { getAllBlogPosts, getAllCategories } from "@/lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
+import { formatDate } from "@/lib/utils"
+import ContentfulImage from "@/components/contentful-image"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -14,21 +15,32 @@ export const metadata: Metadata = {
 }
 
 export default async function BlogPage() {
+  // Fetch blog posts directly from Contentful
   const posts = await getAllBlogPosts()
   const categories = await getAllCategories()
+
+  // Get the first post's cover image for the hero section if available
+  const heroImageUrl =
+    posts.length > 0 && posts[0].fields.coverPhoto ? posts[0].fields.coverPhoto.fields.file.url : null
 
   return (
     <main className="flex min-h-screen flex-col">
       {/* Hero Section */}
       <section className="relative w-full h-[40vh] overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/placeholder.svg?key=xshrj"
-            alt="Blog concept"
-            fill
-            priority
-            className="object-cover brightness-[0.7]"
-          />
+          {heroImageUrl ? (
+            <ContentfulImage
+              src={heroImageUrl}
+              alt="Blog hero"
+              fill
+              priority
+              className="object-cover brightness-[0.7]"
+            />
+          ) : (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <span className="text-muted-foreground">No featured image available</span>
+            </div>
+          )}
         </div>
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">The Blog</h1>
@@ -55,31 +67,75 @@ export default async function BlogPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {posts.map((post) => (
-              <BlogPostCard
-                key={post.sys.id}
-                title={post.fields.title}
-                excerpt={post.fields.excerpt}
-                date={new Date(post.fields.publishDate).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-                slug={post.fields.slug}
-                imageSrc={post.fields.featuredImage?.fields.file.url || ""}
-                tags={post.fields.categories?.map((category) => category.fields.name) || []}
-              />
-            ))}
-          </div>
+          {posts.length === 0 ? (
+            // Show skeletons if no posts are available
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {Array(6)
+                .fill(0)
+                .map((_, index) => (
+                  <div key={index} className="flex flex-col gap-2">
+                    <Skeleton className="aspect-video w-full rounded-lg" />
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {posts.map((post) => (
+                <BlogPostCard
+                  key={post.sys.id}
+                  title={post.fields.title}
+                  excerpt={post.fields.body ? extractExcerpt(post.fields.body) : ""}
+                  date={post.fields.date ? formatDate(post.fields.date) : ""}
+                  slug={post.fields.slug}
+                  imageSrc={post.fields.coverPhoto?.fields.file.url || ""}
+                  tags={post.fields.tags || []}
+                />
+              ))}
+            </div>
+          )}
 
-          {posts.length > 9 && (
-            <div className="flex justify-center mt-12">
-              <Button variant="outline">Load More Articles</Button>
+          {/* Show message if no posts are available */}
+          {posts.length === 0 && (
+            <div className="text-center mt-8">
+              <p className="text-muted-foreground">
+                No blog posts available. Add some posts in Contentful to get started.
+              </p>
             </div>
           )}
         </div>
       </section>
     </main>
   )
+}
+
+// Helper function to extract excerpt from rich text
+function extractExcerpt(richText: any, maxLength = 150): string {
+  try {
+    // If it's a rich text document
+    if (richText.nodeType === "document" && richText.content) {
+      // Find the first paragraph
+      const firstParagraph = richText.content.find((node: any) => node.nodeType === "paragraph")
+
+      if (firstParagraph && firstParagraph.content) {
+        // Extract text from the paragraph
+        const text = firstParagraph.content
+          .filter((node: any) => node.nodeType === "text")
+          .map((node: any) => node.value)
+          .join("")
+
+        // Truncate if needed
+        if (text.length > maxLength) {
+          return text.substring(0, maxLength) + "..."
+        }
+        return text
+      }
+    }
+    return ""
+  } catch (error) {
+    console.error("Error extracting excerpt:", error)
+    return ""
+  }
 }

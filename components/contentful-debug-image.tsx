@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { processContentfulImageUrl, isContentfulImageUrl } from "@/lib/image-utils"
 
 interface ContentfulDebugImageProps {
   imageUrl: string | null | undefined
@@ -19,8 +20,8 @@ export default function ContentfulDebugImage({ imageUrl, alt = "Debug image" }: 
   }
 
   // Process URL only if it's a Contentful URL
-  const processedUrl =
-    imageUrl && imageUrl.includes("ctfassets.net") ? processContentfulUrl(imageUrl, { width: 300 }) : imageUrl
+  const processedUrl = processContentfulImageUrl(imageUrl, { width: 300 })
+  const isContentfulUrl = isContentfulImageUrl(imageUrl)
 
   const testImageUrl = () => {
     if (!imageUrl) {
@@ -46,7 +47,7 @@ export default function ContentfulDebugImage({ imageUrl, alt = "Debug image" }: 
       })
     }
 
-    img.src = processedUrl || imageUrl
+    img.src = processedUrl
   }
 
   return (
@@ -89,6 +90,12 @@ export default function ContentfulDebugImage({ imageUrl, alt = "Debug image" }: 
             </code>
           </div>
 
+          <div>
+            <p>
+              <strong>URL Type:</strong> {isContentfulUrl ? "Contentful Image URL" : "Non-Contentful URL"}
+            </p>
+          </div>
+
           {imageUrl && (
             <div>
               <p>
@@ -96,7 +103,7 @@ export default function ContentfulDebugImage({ imageUrl, alt = "Debug image" }: 
               </p>
               <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded">
                 <img
-                  src={processedUrl || imageUrl}
+                  src={processedUrl || "/placeholder.svg"}
                   alt={alt}
                   className="max-w-full h-auto max-h-40 object-contain"
                   onError={(e) => {
@@ -125,31 +132,4 @@ export default function ContentfulDebugImage({ imageUrl, alt = "Debug image" }: 
       )}
     </div>
   )
-}
-
-// Helper function to process Contentful URLs
-function processContentfulUrl(
-  url: string,
-  options: { width?: number; height?: number; quality?: number } = {},
-): string {
-  try {
-    // Ensure URL has proper protocol
-    const urlStr = url.startsWith("//") ? `https:${url}` : url
-
-    // Only process if it's a Contentful URL
-    if (!urlStr.includes("ctfassets.net")) return url
-
-    const urlObj = new URL(urlStr)
-
-    // Add image optimization parameters
-    if (options.width) urlObj.searchParams.set("w", options.width.toString())
-    if (options.height) urlObj.searchParams.set("h", options.height.toString())
-    if (options.quality) urlObj.searchParams.set("q", options.quality.toString())
-    urlObj.searchParams.set("fm", "webp") // Use WebP format for better performance
-
-    return urlObj.toString()
-  } catch (err) {
-    console.error("Error processing Contentful URL:", err)
-    return url
-  }
 }

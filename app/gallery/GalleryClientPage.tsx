@@ -1,18 +1,14 @@
-import type { Metadata } from "next"
+"use client"
+
+import Image from "next/image"
+import Link from "next/link"
+
 import { getAllPhotos } from "@/lib/api"
 import ContentfulImage from "@/components/contentful-image"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatDate } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
-export const revalidate = 60 // Revalidate this page every 60 seconds
-
-export const metadata: Metadata = {
-  title: "Gallery | Wildlife Photography",
-  description: "Explore wildlife photography by David Martin",
-}
-
-export default async function GalleryPage() {
-  // Fetch photos directly from Contentful
+export default async function GalleryClientPage() {
   const photos = await getAllPhotos()
 
   return (
@@ -20,19 +16,13 @@ export default async function GalleryPage() {
       {/* Hero Section */}
       <section className="relative w-full h-[40vh] overflow-hidden">
         <div className="absolute inset-0 z-0">
-          {photos.length > 0 && photos[0].fields.image ? (
-            <ContentfulImage
-              src={photos[0].fields.image.fields.file.url}
-              alt="Featured gallery image"
-              fill
-              priority
-              className="object-cover brightness-[0.7]"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground">No featured image available</span>
-            </div>
-          )}
+          <Image
+            src="/placeholder.svg?key=50969"
+            alt="Gallery concept"
+            fill
+            priority
+            className="object-cover brightness-[0.7]"
+          />
         </div>
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">Photo Gallery</h1>
@@ -57,7 +47,11 @@ export default async function GalleryPage() {
                     </div>
                   ))
               : photos.map((photo) => (
-                  <div key={photo.sys.id} className="group cursor-pointer overflow-hidden rounded-lg">
+                  <div
+                    key={photo.sys.id}
+                    className="group cursor-pointer overflow-hidden rounded-lg"
+                    onClick={() => {}} // We'll implement a lightbox in the future
+                  >
                     <div className="aspect-[4/3] relative overflow-hidden">
                       {photo.fields.image ? (
                         <ContentfulImage
@@ -71,27 +65,22 @@ export default async function GalleryPage() {
                           <span className="text-muted-foreground">No image</span>
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-70 transition-opacity" />
                       <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-full group-hover:translate-y-0 transition-transform">
                         <h2 className="text-xl font-bold text-white mb-1">{photo.fields.title}</h2>
                         {photo.fields.location && <p className="text-white/80 text-sm">{photo.fields.location}</p>}
-                        {photo.fields.date && (
-                          <p className="text-white/60 text-xs mt-1">{formatDate(photo.fields.date)}</p>
-                        )}
                       </div>
                     </div>
                   </div>
                 ))}
           </div>
 
-          {/* Show message if no photos are available */}
-          {photos.length === 0 && (
-            <div className="text-center mt-8">
-              <p className="text-muted-foreground">
-                No photos available. Add some photos in Contentful to get started.
-              </p>
-            </div>
-          )}
+          {/* Add a link to the full gallery view */}
+          <div className="mt-12 text-center">
+            <Button asChild size="lg">
+              <Link href="/gallery/photos">View Full Gallery</Link>
+            </Button>
+          </div>
         </div>
       </section>
     </main>
