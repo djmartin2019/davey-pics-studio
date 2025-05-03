@@ -7,8 +7,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { JsonLd } from "@/components/json-ld"
-import { PHProvider } from "@/lib/posthog"
-import { Analytics } from "@/components/analytics"
+import { PHProvider } from "@/lib/posthog-client"
+import { Analytics } from "@/components/analytics-client"
 import { Suspense } from "react"
 
 const inter = Inter({ subsets: ["latin"] })

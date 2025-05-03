@@ -1,6 +1,6 @@
 "use client"
 
-import { posthog } from "@/lib/posthog"
+import { posthog } from "@/lib/posthog-client"
 
 type EventOptions = {
   name: string

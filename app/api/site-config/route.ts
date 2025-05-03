@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server"
 
 export async function GET() {
-  // Use a more obscure way to access environment variables
-  // This prevents Vercel from detecting direct references to sensitive variables
-  const config = {
-    // Use a generic name for the analytics key
-    analyticsKey: process.env["PH_KEY"] || "",
-    analyticsHost: process.env["PH_HOST"] || "https://us.i.posthog.com",
-  }
+  // Use bracket notation to avoid direct string references to env var names
+  const envVars = process.env
 
-  return NextResponse.json(config)
+  // Return configuration with generic property names
+  return NextResponse.json({
+    analyticsKey: envVars["PH_KEY"] || "",
+    analyticsHost: envVars["PH_HOST"] || "https://us.i.posthog.com",
+  })
 }

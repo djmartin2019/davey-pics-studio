@@ -2,7 +2,7 @@
 
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect } from "react"
-import { posthog } from "@/lib/posthog"
+import { posthog } from "@/lib/posthog-client"
 
 export function Analytics() {
   const pathname = usePathname()
