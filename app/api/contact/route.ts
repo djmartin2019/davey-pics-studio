@@ -102,10 +102,18 @@ export async function POST(request: Request) {
     } catch (emailError) {
       console.error("Error sending email:", emailError)
 
+      // Check if it's a Gmail authentication error
+      const isAuthError =
+        emailError.code === "EAUTH" && String(emailError).includes("Username and Password not accepted")
+
+      const errorMessage = isAuthError
+        ? "Email authentication failed. Please ensure you're using an App Password for Gmail, not your regular password. See https://support.google.com/accounts/answer/185833 for instructions on creating an App Password."
+        : "Failed to send email. Please try again later or contact us directly."
+
       return NextResponse.json(
         {
           success: false,
-          message: "Failed to send email. Please try again later or contact us directly.",
+          message: errorMessage,
           error: process.env.NODE_ENV === "development" ? String(emailError) : undefined,
         },
         { status: 500 },

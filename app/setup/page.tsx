@@ -4,9 +4,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2, AlertCircle, ArrowRight, Mail } from "lucide-react"
-import ContentfulDiagnostics from "@/components/contentful-diagnostics"
-import EnvVariableChecker from "@/components/env-variable-checker"
-import ContentfulConnectionStatus from "@/components/contentful-connection-status"
 
 export default function SetupPage() {
   const spaceId = process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID
@@ -17,10 +14,35 @@ export default function SetupPage() {
     <div className="container mx-auto py-12 px-4">
       <h1 className="text-3xl font-bold mb-6">Setup Guide</h1>
 
-      <EnvVariableChecker />
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <ContentfulConnectionStatus />
+        <Alert className="bg-blue-100 border-blue-500">
+          <AlertTitle>
+            <span className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-blue-600" />
+              Contentful Configuration
+            </span>
+          </AlertTitle>
+          <AlertDescription>
+            <div className="mt-2">
+              <p>
+                NEXT_PUBLIC_CONTENTFUL_SPACE_ID:{" "}
+                {spaceId ? (
+                  <span className="text-green-600 font-medium">✅ Set</span>
+                ) : (
+                  <span className="text-red-600 font-medium">❌ Not set</span>
+                )}
+              </p>
+              <p>
+                CONTENTFUL_ACCESS_TOKEN:{" "}
+                {accessToken ? (
+                  <span className="text-green-600 font-medium">✅ Set</span>
+                ) : (
+                  <span className="text-red-600 font-medium">❌ Not set</span>
+                )}
+              </p>
+            </div>
+          </AlertDescription>
+        </Alert>
 
         <Alert className={emailPassword ? "bg-green-100 border-green-500" : "bg-yellow-100 border-yellow-500"}>
           <AlertTitle>
@@ -57,8 +79,6 @@ export default function SetupPage() {
         </Alert>
       </div>
 
-      <ContentfulDiagnostics />
-
       <Tabs defaultValue="local" className="mt-8">
         <TabsList>
           <TabsTrigger value="local">Local Development</TabsTrigger>
@@ -90,11 +110,6 @@ EMAIL_PASSWORD=your_app_specific_password`}
                 <li>Restart your development server</li>
               </ol>
             </CardContent>
-            <CardFooter>
-              <Button asChild>
-                <Link href="/api/contentful-test">Test Contentful Connection</Link>
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
         <TabsContent value="vercel" className="mt-4">
@@ -245,6 +260,25 @@ EMAIL_PASSWORD=your_app_specific_password`}
         <Button asChild>
           <Link href="/">Return to Homepage</Link>
         </Button>
+      </div>
+
+      <div className="mt-8 space-y-2">
+        <h3 className="text-lg font-medium">Email Configuration</h3>
+        <p>Set up email for the contact form:</p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>Add EMAIL_USER and EMAIL_PASSWORD to .env.local</li>
+          <li>
+            For Gmail, you need to use an App Password -{" "}
+            <Link href="/setup/email-guide" className="text-primary underline">
+              See detailed guide
+            </Link>
+          </li>
+          <li>
+            <Link href="/test-email" className="text-primary underline">
+              Test email functionality
+            </Link>
+          </li>
+        </ul>
       </div>
     </div>
   )

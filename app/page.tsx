@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowRight, Mail, MapPin } from "lucide-react"
+import { Suspense } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,8 +9,6 @@ import BlogPostCard from "@/components/blog-post-card"
 import ContactForm from "@/components/contact-form"
 import ContentfulImage from "@/components/contentful-image"
 import ContentfulFallback from "@/components/contentful-fallback"
-import ContentfulDebug from "@/components/contentful-debug"
-import ContentfulConnectionDebugger from "@/components/contentful-connection-debugger"
 import { getHomepage, getAllBlogPosts, getPhotographerInfo, getFeaturedParks, getFeaturedServices } from "@/lib/api"
 import { isContentfulConfigured } from "@/lib/contentful"
 import { JsonLd } from "@/components/json-ld"
@@ -78,22 +77,8 @@ export default async function Home() {
   let contentfulError = null
   const isConfigured = isContentfulConfigured()
 
-  // Log environment status
-  console.log("Home page - Contentful configuration status:", {
-    isConfigured,
-    nodeEnv: process.env.NODE_ENV,
-    vercelEnv: process.env.VERCEL_ENV || "local",
-    spaceIdDefined: Boolean(process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID),
-    accessTokenDefined: Boolean(process.env.CONTENTFUL_ACCESS_TOKEN),
-  })
-
   try {
     homepage = await getHomepage()
-    console.log("Homepage data fetched successfully:", {
-      hasHomepage: Boolean(homepage),
-      hasFields: Boolean(homepage?.fields),
-      fieldKeys: homepage?.fields ? Object.keys(homepage.fields) : [],
-    })
   } catch (error) {
     console.error("Error fetching homepage:", error)
     contentfulError = error instanceof Error ? error.message : "Error fetching homepage data"
@@ -121,14 +106,12 @@ export default async function Home() {
 
   try {
     featuredParks = await getFeaturedParks(3)
-    console.log(`Successfully fetched ${featuredParks.length} featured parks`)
   } catch (error) {
     console.error("Error fetching featured parks:", error)
   }
 
   try {
     featuredServices = await getFeaturedServices(3)
-    console.log(`Successfully fetched ${featuredServices.length} featured services`)
   } catch (error) {
     console.error("Error fetching featured services:", error)
   }
@@ -168,13 +151,6 @@ export default async function Home() {
   let heroImageUrl = "/placeholder.svg?key=5q8jl" // Default fallback
   let heroImageTitle = "Wildlife Photography"
 
-  // Log the homepage data to help debug
-  console.log("Homepage data - hero image:", {
-    hasHomepage: Boolean(homepage),
-    hasHeroImage: Boolean(homepage?.fields?.heroImage),
-    heroImageUrl: homepage?.fields?.heroImage?.fields?.file?.url || "not available",
-  })
-
   // Use the single heroImage field
   if (homepage?.fields?.heroImage?.fields?.file?.url) {
     heroImageUrl = homepage.fields.heroImage.fields.file.url
@@ -184,21 +160,6 @@ export default async function Home() {
   // Get the process image URL from the processImage field
   let processImageUrl = "/placeholder.svg?key=houston-wildlife" // Default fallback
 
-  // Super detailed logging for processImage to diagnose the issue
-  console.log("Homepage data - process image (DETAILED DEBUG):", {
-    hasHomepage: Boolean(homepage),
-    homepageType: homepage ? typeof homepage : "null",
-    hasFields: Boolean(homepage?.fields),
-    fieldsType: homepage?.fields ? typeof homepage.fields : "null",
-    allFieldKeys: homepage?.fields ? Object.keys(homepage.fields) : [],
-    hasProcessImage: Boolean(homepage?.fields?.processImage),
-    processImageType: homepage?.fields?.processImage ? typeof homepage.fields.processImage : "null",
-    hasProcessImageFields: Boolean(homepage?.fields?.processImage?.fields),
-    hasProcessImageFile: Boolean(homepage?.fields?.processImage?.fields?.file),
-    hasProcessImageUrl: Boolean(homepage?.fields?.processImage?.fields?.file?.url),
-    rawProcessImageUrl: homepage?.fields?.processImage?.fields?.file?.url || "null",
-  })
-
   // Use the processImage field if it exists with proper null checking
   if (homepage?.fields?.processImage?.fields?.file?.url) {
     processImageUrl = homepage.fields.processImage.fields.file.url
@@ -206,34 +167,10 @@ export default async function Home() {
     if (processImageUrl.startsWith("//")) {
       processImageUrl = `https:${processImageUrl}`
     }
-    console.log("Using processImage URL:", processImageUrl)
-  } else {
-    console.warn("processImage not found or invalid, using fallback image")
   }
-
-  // Add this after the existing console.log statements for processImage
-  console.log("Featured parks data:", {
-    count: featuredParks.length,
-    ids: featuredParks.map((park) => park.sys?.id || "unknown"),
-    names: featuredParks.map((park) => park.fields?.parkName || "unnamed"),
-  })
-
-  console.log("Featured services data:", {
-    count: featuredServices.length,
-    ids: featuredServices.map((service) => service.sys?.id || "unknown"),
-    names: featuredServices.map((service) => service.fields?.serviceName || "unnamed"),
-  })
 
   return (
     <main className="flex min-h-screen flex-col">
-      {/* Show debug components in development */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="container mx-auto px-4 mt-8">
-          <ContentfulConnectionDebugger />
-          <ContentfulDebug />
-        </div>
-      )}
-
       {/* Show error message if there was a problem with Contentful */}
       {showContentfulError && (
         <div className="container mx-auto px-4 mt-8">
@@ -460,7 +397,10 @@ export default async function Home() {
 
             <Card className="bg-card/50 backdrop-blur-sm border-primary/10">
               <CardContent className="pt-6">
-                <ContactForm />
+                {/* Wrap ContactForm in Suspense */}
+                <Suspense fallback={<div className="p-4 text-center">Loading contact form...</div>}>
+                  <ContactForm />
+                </Suspense>
               </CardContent>
             </Card>
           </div>

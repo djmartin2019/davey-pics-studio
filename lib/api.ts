@@ -27,13 +27,11 @@ export async function getHomepage(): Promise<ContentfulHomepage | null> {
 
           // Add robust check for contentTypesResponse.items
           if (!contentTypesResponse || !contentTypesResponse.items) {
-            console.warn("Invalid response when checking for homepage content type. Using sample data.")
             return getSampleHomepage()
           }
 
           // If the content type doesn't exist, return sample data
           if (contentTypesResponse.items.length === 0) {
-            console.warn("Content type 'homepage' not found in Contentful space. Using sample data.")
             return getSampleHomepage()
           }
 
@@ -45,15 +43,6 @@ export async function getHomepage(): Promise<ContentfulHomepage | null> {
 
           if (response.items && response.items.length > 0) {
             const homepage = response.items[0] as unknown as ContentfulHomepage
-
-            // Debug logging to help troubleshoot hero image and process image
-            console.log("Contentful homepage response:", {
-              hasHeroImage: Boolean(homepage.fields?.heroImage),
-              heroImageUrl: homepage.fields?.heroImage?.fields?.file?.url || "not available",
-              hasProcessImage: Boolean(homepage.fields?.processImage),
-              processImageUrl: homepage.fields?.processImage?.fields?.file?.url || "not available",
-              allFields: Object.keys(homepage.fields || {}),
-            })
 
             // Process the single heroImage if it exists
             if (homepage.fields?.heroImage?.fields?.file?.url) {
@@ -71,14 +60,12 @@ export async function getHomepage(): Promise<ContentfulHomepage | null> {
           }
           return getSampleHomepage()
         } catch (contentTypeError) {
-          console.error("Error checking for homepage content type:", contentTypeError)
           return getSampleHomepage()
         }
       },
       5 * 60 * 1000, // 5 minutes cache
     )
   } catch (error) {
-    console.error("Error fetching homepage:", error)
     return getSampleHomepage()
   }
 }
@@ -96,13 +83,11 @@ export async function getAllBlogPosts(): Promise<ContentfulBlogPost[]> {
 
       // Add robust check for contentTypesResponse.items
       if (!contentTypesResponse || !contentTypesResponse.items) {
-        console.warn("Invalid response when checking for blogPost content type.")
         return []
       }
 
       // If the content type doesn't exist, return empty array
       if (contentTypesResponse.items.length === 0) {
-        console.warn("Content type 'blogPost' not found in Contentful space.")
         return []
       }
 
@@ -114,7 +99,6 @@ export async function getAllBlogPosts(): Promise<ContentfulBlogPost[]> {
 
       // Add robust check for response.items
       if (!response || !response.items) {
-        console.warn("Invalid response when fetching blog posts.")
         return []
       }
 
@@ -137,11 +121,9 @@ export async function getAllBlogPosts(): Promise<ContentfulBlogPost[]> {
         return post
       })
     } catch (contentTypeError) {
-      console.error("Error checking for blogPost content type:", contentTypeError)
       return []
     }
   } catch (error) {
-    console.error("Error fetching blog posts:", error)
     return []
   }
 }
@@ -164,7 +146,6 @@ export async function getBlogPostBySlug(slug: string): Promise<ContentfulBlogPos
 
       // If the content type doesn't exist, return null
       if (contentTypesResponse.items.length === 0) {
-        console.warn("Content type 'blogPost' not found in Contentful space.")
         return null
       }
 
@@ -188,7 +169,6 @@ export async function getBlogPostBySlug(slug: string): Promise<ContentfulBlogPos
 
       return null
     } catch (contentTypeError) {
-      console.error("Error checking for blogPost content type:", contentTypeError)
       return null
     }
   } catch (error) {
@@ -210,13 +190,11 @@ export async function getAllPhotos(): Promise<ContentfulGalleryItem[]> {
 
       // Add robust check for contentTypesResponse.items
       if (!contentTypesResponse || !contentTypesResponse.items) {
-        console.warn("Invalid response when checking for photo content type.")
         return []
       }
 
       // If the content type doesn't exist, return empty array
       if (contentTypesResponse.items.length === 0) {
-        console.warn("Content type 'photo' not found in Contentful space.")
         return []
       }
 
@@ -230,7 +208,6 @@ export async function getAllPhotos(): Promise<ContentfulGalleryItem[]> {
 
       // Add robust check for response.items
       if (!response || !response.items) {
-        console.warn("Invalid response when fetching photos.")
         return []
       }
 
@@ -246,11 +223,9 @@ export async function getAllPhotos(): Promise<ContentfulGalleryItem[]> {
         return photo
       })
     } catch (contentTypeError) {
-      console.error("Error checking for photo content type:", contentTypeError)
       return []
     }
   } catch (error) {
-    console.error("Error fetching photos:", error)
     return []
   }
 }
@@ -282,7 +257,6 @@ export async function getAllGalleryCollections(): Promise<ContentfulGalleryColle
 
     return [virtualCollection]
   } catch (error) {
-    console.error("Error creating virtual gallery collection:", error)
     return getSampleGalleryCollections()
   }
 }
@@ -325,7 +299,6 @@ export async function getGalleryCollectionBySlug(slug: string): Promise<Contentf
     const sampleCollections = getSampleGalleryCollections()
     return sampleCollections.find((collection) => collection.fields.slug === slug) || null
   } catch (error) {
-    console.error(`Error fetching gallery collection with slug ${slug}:`, error)
     return null
   }
 }
@@ -343,13 +316,11 @@ export async function getFeaturedGalleryItems(limit = 6): Promise<ContentfulGall
 
       // Add robust check for contentTypesResponse.items
       if (!contentTypesResponse || !contentTypesResponse.items) {
-        console.warn("Invalid response when checking for photo content type. Using sample data.")
         return getSampleGalleryItems().slice(0, limit)
       }
 
       // If the content type doesn't exist, return sample data
       if (contentTypesResponse.items.length === 0) {
-        console.warn("Content type 'photo' not found in Contentful space. Using sample data.")
         return getSampleGalleryItems().slice(0, limit)
       }
 
@@ -364,7 +335,6 @@ export async function getFeaturedGalleryItems(limit = 6): Promise<ContentfulGall
 
         // Check if response is valid
         if (!response || !response.items) {
-          console.warn("Invalid response when fetching photos. Using sample data.")
           return getSampleGalleryItems().slice(0, limit)
         }
 
@@ -379,15 +349,12 @@ export async function getFeaturedGalleryItems(limit = 6): Promise<ContentfulGall
           return item
         })
       } catch (error) {
-        console.error("Error fetching photos:", error)
         return getSampleGalleryItems().slice(0, limit)
       }
     } catch (contentTypeError) {
-      console.error("Error checking for photo content type:", contentTypeError)
       return getSampleGalleryItems().slice(0, limit)
     }
   } catch (error) {
-    console.error("Error fetching featured gallery items:", error)
     return getSampleGalleryItems().slice(0, limit)
   }
 }
@@ -408,7 +375,6 @@ export async function getAllCategories(): Promise<ContentfulCategory[]> {
 
           // If the content type doesn't exist, return sample data
           if (contentTypesResponse.items.length === 0) {
-            console.warn("Content type 'category' not found in Contentful space. Using sample data.")
             return getSampleCategories()
           }
 
@@ -418,14 +384,12 @@ export async function getAllCategories(): Promise<ContentfulCategory[]> {
 
           return response.items as unknown as ContentfulCategory[]
         } catch (contentTypeError) {
-          console.error("Error checking for category content type:", contentTypeError)
           return getSampleCategories()
         }
       },
       30 * 60 * 1000, // 30 minutes cache
     )
   } catch (error) {
-    console.error("Error fetching categories:", error)
     return getSampleCategories()
   }
 }
@@ -443,13 +407,11 @@ export async function getPhotographerInfo(): Promise<ContentfulAuthor | null> {
 
       // Add robust check for contentTypesResponse.items
       if (!contentTypesResponse || !contentTypesResponse.items) {
-        console.warn("Invalid response when checking for author content type.")
         return null
       }
 
       // If the content type doesn't exist, return null
       if (contentTypesResponse.items.length === 0) {
-        console.warn("Content type 'author' not found in Contentful space.")
         return null
       }
 
@@ -463,11 +425,9 @@ export async function getPhotographerInfo(): Promise<ContentfulAuthor | null> {
       }
       return null
     } catch (contentTypeError) {
-      console.error("Error checking for author content type:", contentTypeError)
       return null
     }
   } catch (error) {
-    console.error("Error fetching photographer info:", error)
     return null
   }
 }
@@ -490,7 +450,6 @@ export async function getAboutPageData(): Promise<any> {
 
           // If the content type doesn't exist, return null
           if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
-            console.warn("Content type 'aboutPage' not found in Contentful space.")
             return null
           }
 
@@ -518,14 +477,12 @@ export async function getAboutPageData(): Promise<any> {
           }
           return null
         } catch (contentTypeError) {
-          console.error("Error checking for aboutPage content type:", contentTypeError)
           return null
         }
       },
       5 * 60 * 1000, // 5 minutes cache
     )
   } catch (error) {
-    console.error("Error fetching about page data:", error)
     return null
   }
 }
@@ -546,7 +503,6 @@ export async function getContactPageData(): Promise<any> {
 
           // If the content type doesn't exist, return null
           if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
-            console.warn("Content type 'contactPage' not found in Contentful space.")
             return null
           }
 
@@ -569,14 +525,12 @@ export async function getContactPageData(): Promise<any> {
           }
           return null
         } catch (contentTypeError) {
-          console.error("Error checking for contactPage content type:", contentTypeError)
           return null
         }
       },
       5 * 60 * 1000, // 5 minutes cache
     )
   } catch (error) {
-    console.error("Error fetching contact page data:", error)
     return null
   }
 }
@@ -911,7 +865,6 @@ export async function getAllParks(): Promise<ContentfulPark[]> {
 
           // If the content type doesn't exist, return empty array
           if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
-            console.warn("Content type 'park' not found in Contentful space.")
             return []
           }
 
@@ -959,14 +912,12 @@ export async function getAllParks(): Promise<ContentfulPark[]> {
             return park
           })
         } catch (contentTypeError) {
-          console.error("Error checking for park content type:", contentTypeError)
           return []
         }
       },
       10 * 60 * 1000, // 10 minutes cache
     )
   } catch (error) {
-    console.error("Error fetching parks:", error)
     return []
   }
 }
@@ -992,7 +943,6 @@ export async function getParkBySlug(slug: string): Promise<ContentfulPark | null
 
           // If the content type doesn't exist, return null
           if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
-            console.warn("Content type 'park' not found in Contentful space.")
             return null
           }
 
@@ -1027,14 +977,12 @@ export async function getParkBySlug(slug: string): Promise<ContentfulPark | null
 
           return null
         } catch (contentTypeError) {
-          console.error("Error checking for park content type:", contentTypeError)
           return null
         }
       },
       10 * 60 * 1000, // 10 minutes cache
     )
   } catch (error) {
-    console.error(`Error fetching park with slug ${slug}:`, error)
     return null
   }
 }
@@ -1055,7 +1003,6 @@ export async function getFeaturedParks(limit = 3): Promise<ContentfulPark[]> {
 
           // If the content type doesn't exist, return empty array
           if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
-            console.warn("Content type 'park' not found in Contentful space.")
             return []
           }
 
@@ -1070,7 +1017,6 @@ export async function getFeaturedParks(limit = 3): Promise<ContentfulPark[]> {
 
           // If no featured parks found, get the most recent ones instead
           if (!response.items || response.items.length === 0) {
-            console.log("No parks marked as featured, fetching most recent parks instead")
             const allParksResponse = await client.getEntries({
               content_type: "park",
               order: "-sys.createdAt",
@@ -1104,14 +1050,12 @@ export async function getFeaturedParks(limit = 3): Promise<ContentfulPark[]> {
             return park
           })
         } catch (contentTypeError) {
-          console.error("Error checking for park content type:", contentTypeError)
           return []
         }
       },
       5 * 60 * 1000, // 5 minutes cache
     )
   } catch (error) {
-    console.error("Error fetching featured parks:", error)
     return []
   }
 }
@@ -1132,7 +1076,6 @@ export async function getAllServices(): Promise<ContentfulService[]> {
 
           // If the content type doesn't exist, return empty array
           if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
-            console.warn("Content type 'service' not found in Contentful space.")
             return []
           }
 
@@ -1180,14 +1123,12 @@ export async function getAllServices(): Promise<ContentfulService[]> {
             return service
           })
         } catch (contentTypeError) {
-          console.error("Error checking for service content type:", contentTypeError)
           return []
         }
       },
       10 * 60 * 1000, // 10 minutes cache
     )
   } catch (error) {
-    console.error("Error fetching services:", error)
     return []
   }
 }
@@ -1213,7 +1154,6 @@ export async function getServiceBySlug(slug: string): Promise<ContentfulService 
 
           // If the content type doesn't exist, return null
           if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
-            console.warn("Content type 'service' not found in Contentful space.")
             return null
           }
 
@@ -1248,19 +1188,17 @@ export async function getServiceBySlug(slug: string): Promise<ContentfulService 
 
           return null
         } catch (contentTypeError) {
-          console.error("Error checking for service content type:", contentTypeError)
           return null
         }
       },
       10 * 60 * 1000, // 10 minutes cache
     )
   } catch (error) {
-    console.error(`Error fetching service with slug ${slug}:`, error)
     return null
   }
 }
 
-// Fetch featured services - Updated to focus on Publications and Prints
+// Fetch featured services
 export async function getFeaturedServices(limit = 3): Promise<ContentfulService[]> {
   try {
     return await getCachedData(
@@ -1276,12 +1214,11 @@ export async function getFeaturedServices(limit = 3): Promise<ContentfulService[
 
           // If the content type doesn't exist, return empty array
           if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
-            console.warn("Content type 'service' not found in Contentful space.")
             return []
           }
 
-          // First try to get services that are marked as featured
-          const featuredResponse = await client.getEntries({
+          // First try to get services marked as featured
+          const response = await client.getEntries({
             content_type: "service",
             "fields.featured": true,
             order: "fields.serviceName",
@@ -1289,33 +1226,8 @@ export async function getFeaturedServices(limit = 3): Promise<ContentfulService[
             limit,
           })
 
-          // If we have featured services, use those
-          if (featuredResponse.items && featuredResponse.items.length > 0) {
-            console.log(`Found ${featuredResponse.items.length} featured services`)
-            const services = featuredResponse.items as unknown as ContentfulService[]
-            return services.map((service) => {
-              // Process featured image URL
-              if (service.fields?.featuredImage?.fields?.file?.url) {
-                const url = service.fields.featuredImage.fields.file.url
-                service.fields.featuredImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
-              }
-              return service
-            })
-          }
-
-          // If no featured services, try to get services that are Print Sales or Publication category
-          console.log("No services marked as featured, fetching by category instead")
-          const response = await client.getEntries({
-            content_type: "service",
-            "fields.serviceCategory[in]": "Print Sales,Publication",
-            order: "fields.serviceName",
-            include: 2,
-            limit,
-          })
-
+          // If no featured services found, get the most recent ones instead
           if (!response.items || response.items.length === 0) {
-            // If no services in those categories, get the most recent ones
-            console.log("No services in Print Sales or Publication categories, fetching most recent")
             const allServicesResponse = await client.getEntries({
               content_type: "service",
               order: "-sys.createdAt",
@@ -1349,14 +1261,12 @@ export async function getFeaturedServices(limit = 3): Promise<ContentfulService[
             return service
           })
         } catch (contentTypeError) {
-          console.error("Error checking for service content type:", contentTypeError)
           return []
         }
       },
       5 * 60 * 1000, // 5 minutes cache
     )
   } catch (error) {
-    console.error("Error fetching featured services:", error)
     return []
   }
 }

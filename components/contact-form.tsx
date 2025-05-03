@@ -218,25 +218,6 @@ export default function ContactForm() {
         </Select>
       </div>
 
-      {/* In your form, add a select field for services */}
-      {/* Add this after the subject field */}
-      <div className="space-y-2">
-        <Label htmlFor="service">Interested in a specific service?</Label>
-        <Select name="service" value={selectedService} onValueChange={(value) => setSelectedService(value)}>
-          <SelectTrigger className="bg-background/50">
-            <SelectValue placeholder="Select a service (optional)" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="default">Select a service (optional)</SelectItem>
-            {services.map((service) => (
-              <SelectItem key={service.value} value={service.value}>
-                {service.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="space-y-2">
         <Label htmlFor="message">
           Message <span className="text-red-500">*</span>

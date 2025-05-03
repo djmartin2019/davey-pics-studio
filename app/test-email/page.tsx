@@ -80,6 +80,13 @@ export default function TestEmailPage() {
             <p className="text-xs text-muted-foreground">
               Note: Environment variables are not directly visible in the browser for security reasons.
             </p>
+            <p className="text-xs mt-2">
+              Using Gmail? You need to set up an App Password.{" "}
+              <Link href="/setup/email-guide" className="text-primary underline">
+                See the setup guide
+              </Link>
+              .
+            </p>
           </div>
 
           {testResult && (

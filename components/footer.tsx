@@ -3,7 +3,6 @@ import { Camera, Instagram } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import FooterContentful from "./footer-contentful"
 
 export default function Footer() {
   return (
@@ -31,13 +30,6 @@ export default function Footer() {
                 </Link>
               </Button>
             </div>
-
-            {/* Add Contentful status indicator with error handling */}
-            {process.env.NODE_ENV === "development" && (
-              <div className="pt-2">
-                <FooterContentful />
-              </div>
-            )}
           </div>
 
           {/* Navigation Links */}

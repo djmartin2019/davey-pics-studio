@@ -6,7 +6,6 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
-import EnvStatus from "@/components/env-status"
 import { JsonLd } from "@/components/json-ld"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -106,7 +105,6 @@ export default function RootLayout({
             <Navbar />
             <div className="pt-16">{children}</div>
             <Footer />
-            <EnvStatus /> {/* Environment variable status indicator */}
           </div>
         </ThemeProvider>
       </body>
