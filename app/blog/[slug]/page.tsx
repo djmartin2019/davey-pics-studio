@@ -100,8 +100,8 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       {/* Blog Content */}
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <div className="lg:col-span-8">
+          <div className="grid grid-cols-1 gap-12">
+            <div>
               <article className="prose prose-invert max-w-none">
                 <RichTextRenderer content={post.fields.body} />
               </article>
@@ -123,34 +123,6 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                         {tag}
                       </span>
                     ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="lg:col-span-4">
-              <div className="sticky top-24">
-                <h3 className="text-xl font-semibold mb-6">Recent Articles</h3>
-                <div className="space-y-6">
-                  {/* This would be populated with recent posts in a future update */}
-                  <p className="text-muted-foreground text-sm">
-                    Check back soon for more articles about wildlife photography.
-                  </p>
-                </div>
-
-                {post.fields.tags && post.fields.tags.length > 0 && (
-                  <div className="mt-12 pt-8 border-t border-border">
-                    <h3 className="text-xl font-semibold mb-6">Tags</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {post.fields.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="bg-accent/50 hover:bg-accent/70 px-3 py-1 rounded-full transition-colors"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
                   </div>
                 )}
               </div>
