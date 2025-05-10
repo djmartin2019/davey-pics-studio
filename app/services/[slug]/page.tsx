@@ -1,14 +1,15 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, Clock, DollarSign, MapPin, Tag } from "lucide-react"
+import { Clock, DollarSign, MapPin, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { InfoIcon } from "lucide-react"
 import ContentfulImage from "@/components/contentful-image"
 import RichTextRenderer from "@/components/rich-text-renderer"
-import { getServiceBySlug, getAllServices } from "@/lib/api"
+import { getServiceBySlug, getAllServices, getPageBanner } from "@/lib/api"
 import { JsonLd } from "@/components/json-ld"
+import PageHero from "@/components/page-hero"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -52,6 +53,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function ServicePage({ params }: { params: { slug: string } }) {
   const service = await getServiceBySlug(params.slug)
 
+  // Fetch page banner for service detail page
+  const pageBanner = await getPageBanner(`services-detail-${params.slug}`)
+
+  // If no specific banner for this service, try to get the generic services-detail banner
+  const genericBanner = !pageBanner ? await getPageBanner("services-detail") : null
+
   if (!service) {
     notFound()
   }
@@ -77,34 +84,14 @@ export default async function ServicePage({ params }: { params: { slug: string }
 
   return (
     <main className="flex min-h-screen flex-col">
-      {/* Hero Section */}
-      <section className="relative w-full h-[50vh] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          {featuredImage?.fields?.file?.url ? (
-            <ContentfulImage
-              src={featuredImage.fields.file.url}
-              alt={serviceName}
-              fill
-              priority
-              className="object-cover brightness-[0.7]"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground">No image available</span>
-            </div>
-          )}
-        </div>
-        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-end pb-12">
-          <Button variant="outline" size="sm" asChild className="w-fit mb-6">
-            <Link href="/services" className="flex items-center gap-2">
-              <ArrowLeft size={16} />
-              Back to Services
-            </Link>
-          </Button>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">{serviceName}</h1>
-          <p className="text-lg md:text-xl text-gray-200 max-w-2xl">{shortDescription}</p>
-        </div>
-      </section>
+      {/* Hero Section - Now using the PageHero component */}
+      <PageHero
+        title={serviceName}
+        subtitle={shortDescription}
+        imageUrl={featuredImage?.fields?.file?.url || null}
+        imageAlt={serviceName}
+        pageBanner={pageBanner || genericBanner}
+      />
 
       {/* Print Availability Notice - Only show for print services */}
       {isPrintService && (
@@ -128,7 +115,7 @@ export default async function ServicePage({ params }: { params: { slug: string }
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              <h2 className="text-3xl font-bold mb-6">About {isPrintService ? "Prints" : "Publications"}</h2>
+              <h2 className="text-3xl font-bold mb-6">About {isPrintService ? "This Print" : "This Publication"}</h2>
 
               {detailedDescription && (
                 <div className="prose max-w-none mb-12">

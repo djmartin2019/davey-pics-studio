@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
-import { getAllParks } from "@/lib/api"
-import ContentfulImage from "@/components/contentful-image"
+import { getAllParks, getPageBanner } from "@/lib/api"
 import ParkCard from "@/components/park-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { JsonLd } from "@/components/json-ld"
+import PageHero from "@/components/page-hero"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -16,32 +16,19 @@ export default async function ParksPage() {
   // Fetch parks from Contentful
   const parks = await getAllParks()
 
+  // Fetch page banner for parks page
+  const pageBanner = await getPageBanner("parks")
+
   return (
     <main className="flex min-h-screen flex-col">
-      {/* Hero Section */}
-      <section className="relative w-full h-[40vh] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          {parks.length > 0 && parks[0].fields.heroImage ? (
-            <ContentfulImage
-              src={parks[0].fields.heroImage.fields.file.url}
-              alt="Wildlife photography locations"
-              fill
-              priority
-              className="object-cover brightness-[0.7]"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground">No featured image available</span>
-            </div>
-          )}
-        </div>
-        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">Photography Locations</h1>
-          <p className="text-lg md:text-xl text-gray-200 max-w-2xl">
-            Discover the best parks and wildlife areas for photography in Houston and beyond
-          </p>
-        </div>
-      </section>
+      {/* Hero Section - Now using the PageHero component */}
+      <PageHero
+        title="Photography Locations"
+        subtitle="Discover the best parks and wildlife areas for photography in Houston and beyond"
+        imageUrl={parks.length > 0 && parks[0].fields.heroImage ? parks[0].fields.heroImage.fields.file.url : null}
+        imageAlt="Wildlife photography locations"
+        pageBanner={pageBanner}
+      />
 
       {/* Parks Listing */}
       <section className="py-20 bg-background">

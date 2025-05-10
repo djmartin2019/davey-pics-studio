@@ -8,6 +8,7 @@ import type {
   ContentfulAuthor,
   ContentfulPark,
   ContentfulService,
+  ContentfulPageBanner,
 } from "../types/contentful"
 import { getCachedData } from "./contentful-cache"
 
@@ -531,6 +532,58 @@ export async function getContactPageData(): Promise<any> {
       5 * 60 * 1000, // 5 minutes cache
     )
   } catch (error) {
+    return null
+  }
+}
+
+// NEW: Fetch Page Banner by identifier
+export async function getPageBanner(pageIdentifier: string): Promise<ContentfulPageBanner | null> {
+  try {
+    return await getCachedData(
+      `page-banner-${pageIdentifier}`,
+      async () => {
+        const client = getContentfulClient()
+
+        // First check if the content type exists
+        try {
+          const contentTypesResponse = await client.getContentTypes({
+            "sys.id": "pageBanner",
+          })
+
+          // If the content type doesn't exist, return null
+          if (!contentTypesResponse.items || contentTypesResponse.items.length === 0) {
+            return null
+          }
+
+          const response = await client.getEntries({
+            content_type: "pageBanner",
+            "fields.pageIdentifier": pageIdentifier,
+            "fields.isActive": true,
+            include: 2,
+            limit: 1,
+          })
+
+          if (response.items && response.items.length > 0) {
+            const pageBanner = response.items[0] as unknown as ContentfulPageBanner
+
+            // Process image URL to ensure it has https:// prefix
+            if (pageBanner.fields?.bannerImage?.fields?.file?.url) {
+              const url = pageBanner.fields.bannerImage.fields.file.url
+              pageBanner.fields.bannerImage.fields.file.url = url.startsWith("//") ? `https:${url}` : url
+            }
+
+            return pageBanner
+          }
+          return null
+        } catch (contentTypeError) {
+          console.error("Error fetching page banner:", contentTypeError)
+          return null
+        }
+      },
+      5 * 60 * 1000, // 5 minutes cache
+    )
+  } catch (error) {
+    console.error("Error in getPageBanner:", error)
     return null
   }
 }

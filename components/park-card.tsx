@@ -10,12 +10,12 @@ interface ParkCardProps {
 export default function ParkCard({ park }: ParkCardProps) {
   const { parkName, slug, shortDescription, heroImage, address, difficultyLevel } = park.fields
 
-  // Determine difficulty badge color
+  // Determine difficulty badge color with updated difficulty levels
   const difficultyColor = {
-    Easy: "bg-green-500/80",
+    Beginner: "bg-green-500/80",
     Moderate: "bg-amber-500/80",
     Challenging: "bg-red-500/80",
-  }[difficultyLevel || "Easy"]
+  }[difficultyLevel || "Beginner"]
 
   return (
     <Link href={`/parks/${slug}`} className="group block">

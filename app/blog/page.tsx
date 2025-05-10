@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
-import { getAllBlogPosts, getAllCategories } from "@/lib/api"
+import { getAllBlogPosts, getAllCategories, getPageBanner } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import BlogPostCard from "@/components/blog-post-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatDate } from "@/lib/utils"
-import ContentfulImage from "@/components/contentful-image"
+import PageHero from "@/components/page-hero"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -19,34 +19,23 @@ export default async function BlogPage() {
   const posts = await getAllBlogPosts()
   const categories = await getAllCategories()
 
+  // Fetch page banner for blog page
+  const pageBanner = await getPageBanner("blog")
+
   // Get the first post's cover image for the hero section if available
   const heroImageUrl =
     posts.length > 0 && posts[0].fields.coverPhoto ? posts[0].fields.coverPhoto.fields.file.url : null
 
   return (
     <main className="flex min-h-screen flex-col">
-      {/* Hero Section */}
-      <section className="relative w-full h-[40vh] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          {heroImageUrl ? (
-            <ContentfulImage
-              src={heroImageUrl}
-              alt="Blog hero"
-              fill
-              priority
-              className="object-cover brightness-[0.7]"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground">No featured image available</span>
-            </div>
-          )}
-        </div>
-        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">The Blog</h1>
-          <p className="text-lg md:text-xl text-gray-200 max-w-2xl">Insights, stories, and techniques from the field</p>
-        </div>
-      </section>
+      {/* Hero Section - Now using the PageHero component */}
+      <PageHero
+        title="The Blog"
+        subtitle="Insights, stories, and techniques from the field"
+        imageUrl={heroImageUrl}
+        imageAlt="Blog hero"
+        pageBanner={pageBanner}
+      />
 
       {/* Blog Posts Section */}
       <section className="py-20 bg-background">

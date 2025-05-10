@@ -4,10 +4,10 @@ import { ArrowLeft, Calendar, Share2 } from "lucide-react"
 import { notFound } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
-import ContentfulImage from "@/components/contentful-image"
 import RichTextRenderer from "@/components/rich-text-renderer"
-import { getBlogPostBySlug, getAllBlogPosts } from "@/lib/api"
+import { getBlogPostBySlug, getAllBlogPosts, getPageBanner } from "@/lib/api"
 import { formatDate } from "@/lib/utils"
+import PageHero from "@/components/page-hero"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -43,65 +43,68 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = await getBlogPostBySlug(params.slug)
 
+  // Fetch page banner for blog detail page
+  const pageBanner = await getPageBanner(`blog-detail-${params.slug}`)
+
+  // If no specific banner for this post, try to get the generic blog-detail banner
+  const genericBanner = !pageBanner ? await getPageBanner("blog-detail") : null
+
   if (!post) {
     notFound()
   }
 
   const publishDate = post.fields.date ? formatDate(post.fields.date) : ""
 
+  // Get the cover image URL
+  const coverImageUrl = post.fields.coverPhoto?.fields?.file?.url || null
+
   return (
     <main className="flex min-h-screen flex-col">
-      {/* Hero Section */}
-      <section className="relative w-full h-[50vh] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          {post.fields.coverPhoto ? (
-            <ContentfulImage
-              src={post.fields.coverPhoto.fields.file.url}
-              alt={post.fields.coverPhoto.fields.title || post.fields.title}
-              fill
-              priority
-              className="object-cover brightness-[0.7]"
-            />
-          ) : (
-            <div className="w-full h-full bg-accent/20" />
-          )}
-        </div>
-        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-end pb-12">
-          <Button variant="ghost" asChild className="text-white mb-6 w-fit">
-            <Link href="/blog" className="flex items-center gap-2">
-              <ArrowLeft size={16} />
-              Back to Blog
-            </Link>
-          </Button>
-          {post.fields.tags && post.fields.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {post.fields.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="bg-primary/20 text-primary-foreground text-xs px-2 py-1 rounded-full backdrop-blur-sm"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white mb-4">{post.fields.title}</h1>
-          {publishDate && (
-            <div className="flex items-center gap-4 text-gray-200">
-              <div className="flex items-center gap-2">
-                <Calendar size={16} />
-                <span>{publishDate}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Hero Section - Now using the PageHero component */}
+      <PageHero
+        title={post.fields.title}
+        subtitle=""
+        imageUrl={coverImageUrl}
+        imageAlt={post.fields.coverPhoto?.fields?.title || post.fields.title}
+        pageBanner={pageBanner || genericBanner}
+      />
 
       {/* Blog Content */}
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 gap-12">
             <div>
+              <div className="mb-8">
+                <Button variant="ghost" asChild className="mb-6 w-fit">
+                  <Link href="/blog" className="flex items-center gap-2">
+                    <ArrowLeft size={16} />
+                    Back to Blog
+                  </Link>
+                </Button>
+
+                {post.fields.tags && post.fields.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {post.fields.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="bg-primary/20 text-primary-foreground text-xs px-2 py-1 rounded-full backdrop-blur-sm"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {publishDate && (
+                  <div className="flex items-center gap-4 text-muted-foreground mb-6">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={16} />
+                      <span>{publishDate}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <article className="prose prose-invert max-w-none">
                 <RichTextRenderer content={post.fields.body} />
               </article>

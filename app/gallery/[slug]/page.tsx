@@ -5,10 +5,10 @@ import { notFound } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import PhotoGallery from "@/components/photo-gallery"
-import ContentfulImage from "@/components/contentful-image"
 import ContentfulDebugImage from "@/components/contentful-debug-image"
-import { getGalleryCollectionBySlug } from "@/lib/api"
+import { getGalleryCollectionBySlug, getPageBanner } from "@/lib/api"
 import { getContentfulField } from "@/lib/contentful-utils"
+import PageHero from "@/components/page-hero"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -42,6 +42,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function GalleryCollectionPage({ params }: { params: { slug: string } }) {
   const collection = await getGalleryCollectionBySlug(params.slug)
 
+  // Fetch page banner for gallery detail page
+  const pageBanner = await getPageBanner(`gallery-detail-${params.slug}`)
+
+  // If no specific banner for this gallery, try to get the generic gallery-detail banner
+  const genericBanner = !pageBanner ? await getPageBanner("gallery-detail") : null
+
   if (!collection) {
     notFound()
   }
@@ -57,31 +63,14 @@ export default async function GalleryCollectionPage({ params }: { params: { slug
 
   return (
     <main className="flex min-h-screen flex-col">
-      {/* Hero Section */}
-      <section className="relative w-full h-[50vh] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <ContentfulImage
-            src={coverImageUrl}
-            alt={collection.fields.title}
-            fill
-            priority
-            className="object-cover brightness-[0.7]"
-            fallbackSrc="/placeholder.svg?key=wl7p2"
-          />
-        </div>
-        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-end pb-12">
-          <Button variant="ghost" asChild className="text-white mb-6 w-fit">
-            <Link href="/gallery" className="flex items-center gap-2">
-              <ArrowLeft size={16} />
-              Back to Gallery
-            </Link>
-          </Button>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white mb-4">{collection.fields.title}</h1>
-          {collection.fields.description && (
-            <p className="text-lg text-gray-200 max-w-2xl">{collection.fields.description}</p>
-          )}
-        </div>
-      </section>
+      {/* Hero Section - Now using the PageHero component */}
+      <PageHero
+        title={collection.fields.title}
+        subtitle={collection.fields.description || ""}
+        imageUrl={coverImageUrl}
+        imageAlt={collection.fields.title}
+        pageBanner={pageBanner || genericBanner}
+      />
 
       {/* Debug information in development */}
       {showDebugInfo && (
@@ -93,6 +82,13 @@ export default async function GalleryCollectionPage({ params }: { params: { slug
       {/* Gallery */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
+          <Button variant="ghost" asChild className="mb-6 w-fit">
+            <Link href="/gallery" className="flex items-center gap-2">
+              <ArrowLeft size={16} />
+              Back to Gallery
+            </Link>
+          </Button>
+
           <PhotoGallery items={photos} />
         </div>
       </section>

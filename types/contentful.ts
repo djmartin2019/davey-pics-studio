@@ -187,7 +187,7 @@ export interface ContentfulPark {
     }>
     photographyTips?: any // Rich text
     amenities?: string[]
-    difficultyLevel?: "Easy" | "Moderate" | "Challenging"
+    difficultyLevel?: "Beginner" | "Moderate" | "Challenging" // Updated difficulty levels
     featured?: boolean
     relatedParks?: ContentfulPark[]
     relatedBlogPosts?: ContentfulBlogPost[]
@@ -232,5 +232,19 @@ export interface ContentfulService {
     featured?: boolean
     relatedServices?: ContentfulService[]
     relatedBlogPosts?: ContentfulBlogPost[]
+  }
+}
+
+// Page Banner content type (NEW)
+export interface ContentfulPageBanner {
+  sys: ContentfulSys
+  fields: {
+    pageIdentifier: string // e.g., "parks", "services", "parks-detail", "services-detail"
+    title: string // For admin purposes
+    description?: string // For admin purposes
+    bannerImage: ContentfulImage
+    headingText?: string // Optional override for the page heading
+    subheadingText?: string // Optional override for the page subheading
+    isActive: boolean // Whether this banner should be used
   }
 }

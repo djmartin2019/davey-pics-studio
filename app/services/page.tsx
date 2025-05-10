@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
-import { getAllServices } from "@/lib/api"
-import ContentfulImage from "@/components/contentful-image"
+import { getAllServices, getPageBanner } from "@/lib/api"
 import ServiceCard from "@/components/service-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { JsonLd } from "@/components/json-ld"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { InfoIcon } from "lucide-react"
+import PageHero from "@/components/page-hero"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -18,6 +18,9 @@ export default async function ServicesPage() {
   // Fetch services from Contentful
   const allServices = await getAllServices()
 
+  // Fetch page banner for services page
+  const pageBanner = await getPageBanner("services")
+
   // Filter services to only include Publications and Prints
   const services = allServices.filter(
     (service) => service.fields.serviceCategory === "Print Sales" || service.fields.serviceCategory === "Publication",
@@ -25,36 +28,18 @@ export default async function ServicesPage() {
 
   return (
     <main className="flex min-h-screen flex-col">
-      {/* Hero Section */}
-      <section className="relative w-full h-[40vh] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          {services.length > 0 && services[0].fields.featuredImage ? (
-            <ContentfulImage
-              src={services[0].fields.featuredImage.fields.file.url}
-              alt="Wildlife photography publications and prints"
-              fill
-              priority
-              className="object-cover brightness-[0.7]"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <ContentfulImage
-                src="/placeholder.svg?key=publications-prints"
-                alt="Wildlife photography publications and prints"
-                fill
-                priority
-                className="object-cover brightness-[0.7]"
-              />
-            </div>
-          )}
-        </div>
-        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">My Services</h1>
-          <p className="text-lg md:text-xl text-gray-200 max-w-2xl">
-            Explore my wildlife photography publications and fine art print offerings
-          </p>
-        </div>
-      </section>
+      {/* Hero Section - Now using the PageHero component */}
+      <PageHero
+        title="Publications & Prints"
+        subtitle="Explore my wildlife photography publications and fine art print offerings"
+        imageUrl={
+          services.length > 0 && services[0].fields.featuredImage
+            ? services[0].fields.featuredImage.fields.file.url
+            : "/placeholder.svg?key=publications-prints"
+        }
+        imageAlt="Wildlife photography publications and prints"
+        pageBanner={pageBanner}
+      />
 
       {/* Print Availability Notice */}
       <section className="py-8 bg-background">

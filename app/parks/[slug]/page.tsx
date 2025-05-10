@@ -1,12 +1,12 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, Calendar, Clock, MapPin, Ruler } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import ContentfulImage from "@/components/contentful-image"
 import RichTextRenderer from "@/components/rich-text-renderer"
-import { getParkBySlug } from "@/lib/api"
+import { getParkBySlug, getPageBanner } from "@/lib/api"
 import { JsonLd } from "@/components/json-ld"
+import PageHero from "@/components/page-hero"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -43,6 +43,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function ParkPage({ params }: { params: { slug: string } }) {
   const park = await getParkBySlug(params.slug)
 
+  // Fetch page banner for park detail page
+  const pageBanner = await getPageBanner(`parks-detail-${params.slug}`)
+
+  // If no specific banner for this park, try to get the generic parks-detail banner
+  const genericBanner = !pageBanner ? await getPageBanner("parks-detail") : null
+
   if (!park) {
     return (
       <div className="container mx-auto px-4 py-20">
@@ -72,24 +78,14 @@ export default async function ParkPage({ params }: { params: { slug: string } })
 
   return (
     <main className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative w-full h-[50vh] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <ContentfulImage
-            src={heroImageUrl}
-            alt={`${park.fields.parkName} - Wildlife Photography Location`}
-            fill
-            priority
-            className="object-cover brightness-[0.7]"
-          />
-        </div>
-        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-end pb-12">
-          <div className="max-w-3xl space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">{park.fields.parkName}</h1>
-            <p className="text-lg md:text-xl text-gray-200">{park.fields.shortDescription}</p>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section - Now using the PageHero component */}
+      <PageHero
+        title={park.fields.parkName}
+        subtitle={park.fields.shortDescription}
+        imageUrl={heroImageUrl}
+        imageAlt={`${park.fields.parkName} - Wildlife Photography Location`}
+        pageBanner={pageBanner || genericBanner}
+      />
 
       {/* Park Details */}
       <section className="py-12">
@@ -238,15 +234,13 @@ export default async function ParkPage({ params }: { params: { slug: string } })
                 )}
 
                 {/* Difficulty */}
-                {park.fields.difficultyLevel && (
-                  <div className="mb-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Ruler className="h-5 w-5 text-primary" />
-                      <p className="font-medium">Difficulty Level</p>
-                    </div>
-                    <p className="text-muted-foreground ml-8">{park.fields.difficultyLevel}</p>
+                <div className="mb-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Ruler className="h-5 w-5 text-primary" />
+                    <p className="font-medium">Difficulty Level</p>
                   </div>
-                )}
+                  <p className="text-muted-foreground ml-8">{park.fields.difficultyLevel || "Beginner"}</p>
+                </div>
 
                 {/* Wildlife Species */}
                 {hasWildlifeSpecies && (

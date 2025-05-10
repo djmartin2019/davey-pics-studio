@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
-import { getAllPhotos } from "@/lib/api"
+import { getAllPhotos, getPageBanner } from "@/lib/api"
 import ContentfulImage from "@/components/contentful-image"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatDate } from "@/lib/utils"
+import PageHero from "@/components/page-hero"
 
 export const revalidate = 60 // Revalidate this page every 60 seconds
 
@@ -15,32 +16,22 @@ export default async function GalleryPage() {
   // Fetch photos directly from Contentful
   const photos = await getAllPhotos()
 
+  // Fetch page banner for gallery page
+  const pageBanner = await getPageBanner("gallery")
+
+  // Get the first photo's image for the hero section if available
+  const heroImageUrl = photos.length > 0 && photos[0].fields.image ? photos[0].fields.image.fields.file.url : null
+
   return (
     <main className="flex min-h-screen flex-col">
-      {/* Hero Section */}
-      <section className="relative w-full h-[40vh] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          {photos.length > 0 && photos[0].fields.image ? (
-            <ContentfulImage
-              src={photos[0].fields.image.fields.file.url}
-              alt="Featured gallery image"
-              fill
-              priority
-              className="object-cover brightness-[0.7]"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground">No featured image available</span>
-            </div>
-          )}
-        </div>
-        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">Photo Gallery</h1>
-          <p className="text-lg md:text-xl text-gray-200 max-w-2xl">
-            Explore wildlife photography from various locations and subjects
-          </p>
-        </div>
-      </section>
+      {/* Hero Section - Now using the PageHero component */}
+      <PageHero
+        title="Photo Gallery"
+        subtitle="Explore wildlife photography from various locations and subjects"
+        imageUrl={heroImageUrl}
+        imageAlt="Featured gallery image"
+        pageBanner={pageBanner}
+      />
 
       {/* Gallery Photos */}
       <section className="py-20 bg-background">
